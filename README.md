@@ -1,1 +1,1 @@
-# ixa
+# ixe script nigga
