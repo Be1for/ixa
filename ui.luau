@@ -3252,7 +3252,7 @@ TABS[3] = {
     end
 }
 
-local DISCORD_INVITE = "https://discord.gg/ggfPWB6N3t"
+local DISCORD_INVITE = "https://discord.gg/dZ9rnh7tjS"
 local DISCORD_MEMBERS_TEXT = "400+ members"
 
 IXAL_Keys["Main"] = "Главная"
