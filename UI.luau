@@ -1807,26 +1807,117 @@ function Window:SetOverlayVisible(frame, visible)
 	end
 end
 
-function Window:_layoutHotkeys(animated)
-	local rowHeight, rowGap, top = 21, 2, 35
-	local height = 34 + #self.HotkeyOrder * (rowHeight + rowGap) + 7
-	local size = Offset(220, height)
-	if animated then
-		self.HotkeyLayoutAnimating = true
-		animate(self.Hotkeys, "Size", size, "Smooth", {
-			Done = function()
-				self.HotkeyLayoutAnimating = false
-				self:_placeOverlays()
-			end,
-		})
-	else
-		snap(self.Hotkeys, "Size", size)
+local function makeIxaCard(parent, name, width, height, padding, gap, order)
+	local card = new("Frame", {
+		Name = name, Size = Offset(width or 0, height), AutomaticSize = width and Enum.AutomaticSize.None or Enum.AutomaticSize.X,
+		Bg = "Element", BackgroundTransparency = 0.16, Radius = 8, Border = "Outline", LayoutOrder = order or 1,
+		ZIndex = 901,
+	}, parent)
+	for _, child in card:GetChildren() do
+		if child:IsA("UIStroke") then
+			child.Transparency = 0.45
+			break
+		end
 	end
+	addShadow(card, "Medium")
+	local glow = new("Frame", {
+		Name = "Glow", Size = Dim2(1, 0, 1, 0), Bg = "Accent", BackgroundTransparency = 0.84, Radius = 8, ZIndex = 901,
+	}, card)
+	local glowGradient = Instance.new("UIGradient")
+	glowGradient.Rotation = 90
+	glowGradient.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.45), NumberSequenceKeypoint.new(0.6, 0.82), NumberSequenceKeypoint.new(1, 0.9),
+	})
+	glowGradient.Parent = glow
+	local shine = new("Frame", {
+		Name = "TopShine", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(0.5, 0, 0, 1),
+		Size = Dim2(1, -14, 0, 1), Bg = "Accent", BackgroundTransparency = 0.7, ZIndex = 902,
+	}, card)
+	local shineGradient = Instance.new("UIGradient")
+	shineGradient.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.1), NumberSequenceKeypoint.new(1, 1),
+	})
+	shineGradient.Parent = shine
+	local body = new("Frame", {
+		Name = "Content", Size = width and Dim2(1, 0, 1, 0) or Offset(0, height),
+		AutomaticSize = width and Enum.AutomaticSize.None or Enum.AutomaticSize.X,
+		BackgroundTransparency = 1, ZIndex = 903,
+	}, card)
+	local paddingObject = Instance.new("UIPadding")
+	paddingObject.PaddingLeft = UDim.new(0, padding)
+	paddingObject.PaddingRight = UDim.new(0, padding)
+	paddingObject.Parent = body
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, gap)
+	layout.Parent = body
+	return card, body
+end
+
+local function makeIxaKeyboard(parent, size, order)
+	local root = new("Frame", { Name = "KeyboardIcon", Size = Offset(size, size), BackgroundTransparency = 1, LayoutOrder = order, ZIndex = 904 }, parent)
+	local shell = new("Frame", {
+		Name = "Shell", AnchorPoint = Vec2(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
+		Size = Offset(size - 2, size - 4), BackgroundTransparency = 1, Radius = 2, Border = "Outline", ZIndex = 904,
+	}, root)
+	local stroke = shell:FindFirstChildOfClass("UIStroke")
+	if stroke then bind(stroke, "Color", "InactiveText") end
+	for row = 0, 1 do
+		for column = 0, 3 do
+			new("Frame", {
+				Name = "Key", Position = Offset(3 + column * 2.5, 3 + row * 3.5), Size = Offset(1.5, 1.5),
+				Bg = "InactiveText", BackgroundTransparency = 0.12, ZIndex = 905,
+			}, root)
+		end
+	end
+	return root
+end
+
+local function makeIxaClock(parent, size, order)
+	local root = new("Frame", { Name = "ClockIcon", Size = Offset(size, size), BackgroundTransparency = 1, LayoutOrder = order, ZIndex = 904 }, parent)
+	local dial = new("Frame", {
+		Name = "Dial", AnchorPoint = Vec2(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
+		Size = Offset(size - 2, size - 2), BackgroundTransparency = 1, Radius = FULL, Border = "Outline", ZIndex = 904,
+	}, root)
+	local stroke = dial:FindFirstChildOfClass("UIStroke")
+	if stroke then bind(stroke, "Color", "InactiveText") end
+	new("Frame", {
+		Name = "HourHand", AnchorPoint = Vec2(0.5, 1), Position = UDim2.new(0.5, 0, 0.55, 0),
+		Size = Offset(1, math.max(3, math.floor(size * 0.24))), Bg = "InactiveText", ZIndex = 905,
+	}, root)
+	new("Frame", {
+		Name = "MinuteHand", AnchorPoint = Vec2(0, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
+		Size = Offset(math.max(3, math.floor(size * 0.28)), 1), Bg = "InactiveText", ZIndex = 905,
+	}, root)
+	return root
+end
+
+function Window:_layoutHotkeys(animated)
+	local maxWidth = math.ceil(self.HotkeysHeader.AbsoluteSize.X)
+	for _, object in self.HotkeyOrder do
+		local entry = self.HotkeyEntries[object]
+		if entry then
+			local nameWidth = math.ceil(entry.Label.TextBounds.X)
+			local keyWidth = math.ceil(entry.KeyLabel.TextBounds.X)
+			entry.NameCard.Size = Offset(28 + nameWidth + 28, 32)
+			entry.KeyCard.Size = Offset(math.max(32, 24 + keyWidth), 32)
+			local rowWidth = entry.NameCard.Size.X.Offset + 5 + entry.KeyCard.Size.X.Offset + 4
+			entry.Frame.Size = Offset(rowWidth, 36)
+			maxWidth = math.max(maxWidth, rowWidth)
+		end
+	end
+	self.HotkeysContent.Size = Offset(maxWidth, #self.HotkeyOrder * 36)
 	for index, object in self.HotkeyOrder do
 		local entry = self.HotkeyEntries[object]
-		if entry then place(entry.Frame, "Position", Offset(10, top + (index - 1) * (rowHeight + rowGap)), animated, "Settle") end
+		if entry then
+			entry.Frame.LayoutOrder = index
+			if not entry.Frame.Visible then entry.Frame.Visible = true end
+		end
 	end
-	if not self.Moved[self.Hotkeys] and not self.OverlayAnimating[self.Hotkeys] and not self.HotkeyLayoutAnimating then self:_placeOverlays() end
+	if not self.Moved[self.Hotkeys] and not self.OverlayAnimating[self.Hotkeys] then self:_placeOverlays() end
 end
 
 function Window:SetHotkeyActive(object, active)
@@ -1834,21 +1925,36 @@ function Window:SetHotkeyActive(object, active)
 	local shouldShow = active and object.Key ~= nil
 	if shouldShow and not entry then
 		local frame = new("Frame", {
-			Name = "HotkeyRow", Position = Offset(-8, 35), Size = Offset(200, 21),
-			BackgroundTransparency = 1, Visible = false,
-		}, self.Hotkeys)
-		local name = label(frame, { TextSize = 11, X = 12, RowH = 21, W = 128, Weight = Enum.FontWeight.Medium, Truncate = Enum.TextTruncate.AtEnd })
-		local key = label(frame, { TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "Accent", RowH = 21, W = 58 })
-		key.TextXAlignment = Enum.TextXAlignment.Right
-		key.Position = Offset(140, 0)
-		entry = { Frame = frame, Label = name, KeyLabel = key, Fader = newFader(frame) }
+			Name = "HotkeyRow", Size = Offset(0, 36), BackgroundTransparency = 1, Visible = false, ZIndex = 902,
+		}, self.HotkeysContent)
+		local rowLayout = Instance.new("UIListLayout")
+		rowLayout.FillDirection = Enum.FillDirection.Horizontal
+		rowLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		rowLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		rowLayout.Padding = UDim.new(0, 5)
+		rowLayout.Parent = frame
+		local nameCard, nameBody = self.HotkeysCardBuilder(frame, "NameCard", 1, nil, 32, 14, 10)
+		local name = new("TextLabel", {
+			Name = "Name", AutomaticSize = Enum.AutomaticSize.X, Size = Offset(0, 20), BackgroundTransparency = 1, TextSize = 14,
+			Weight = Enum.FontWeight.Medium, Fg = "Text", TextTransparency = 0.05, ZIndex = 906,
+		}, nameBody)
+		local keyCard, keyBody = self.HotkeysCardBuilder(frame, "KeyCard", 2, nil, 32, 12, 0)
+		local key = new("TextLabel", {
+			Name = "Key", AutomaticSize = Enum.AutomaticSize.X, Size = Offset(0, 20), BackgroundTransparency = 1, TextSize = 14,
+			Weight = Enum.FontWeight.Medium, Fg = "Accent", TextTransparency = 0.1, ZIndex = 906,
+		}, keyBody)
+		entry = { Frame = frame, NameCard = nameCard, KeyCard = keyCard, Label = name, KeyLabel = key, Fader = newFader(frame) }
 		self.HotkeyEntries[object] = entry
 		table.insert(self.HotkeyOrder, object)
 		setText(name, object.Name or "Key")
 		setText(key, keyName(object.Key))
-		frame.Position = Offset(-8, 35 + (#self.HotkeyOrder - 1) * 23)
+		local function fitRow()
+			if frame.Parent then self:_layoutHotkeys(true) end
+		end
+		name:GetPropertyChangedSignal("TextBounds"):Connect(fitRow)
+		key:GetPropertyChangedSignal("TextBounds"):Connect(fitRow)
 		entry.Fader:Show(nil, "Smooth")
-	if self.OverlayEnabled[self.Hotkeys] ~= false then self:SetOverlayVisible(self.Hotkeys, true) end
+		if self.OverlayEnabled[self.Hotkeys] ~= false then self:SetOverlayVisible(self.Hotkeys, true) end
 	elseif entry and shouldShow then
 		setText(entry.Label, object.Name or "Key")
 		setText(entry.KeyLabel, keyName(object.Key))
@@ -1858,14 +1964,12 @@ function Window:SetHotkeyActive(object, active)
 		self.HotkeyEntries[object] = nil
 		local index = table.find(self.HotkeyOrder, object)
 		if index then table.remove(self.HotkeyOrder, index) end
-		animate(entry.Frame, "Position", Offset(-8, entry.Frame.Position.Y.Offset), "Smooth")
 		entry.Fader:Hide(function() entry.Frame:Destroy() end, "Smooth")
 	else
 		return
 	end
 	self:_layoutHotkeys(true)
 end
-
 function Window:Notify(options)
 	if type(options) == "string" then options = { Text = options } end
 	local frame = new("Frame", { Bg = "Background", Size = Offset(60, 28), Radius = Metrics.FloatRadius, Border = "Outline", Visible = false }, self.Notifications)
@@ -2916,202 +3020,208 @@ end
 
 function Window:_buildWatermark(options)
 	local player = Players.LocalPlayer
-
-	
 	local frame = new("Frame", {
-		Name = "IxaWatermark",
-		AutomaticSize = Enum.AutomaticSize.X,
-		Size = Offset(0, 34),
-		BackgroundColor3 = RGB(12, 12, 15),
-		BackgroundTransparency = 0.08,
-		Radius = 8,
-		Active = true,
+		Name = "IxaWatermark", AnchorPoint = Vec2(1, 0), Position = UDim2.new(1, -8, 0, 8),
+		Size = Offset(0, 50), AutomaticSize = Enum.AutomaticSize.X, BackgroundTransparency = 1, Active = true, ZIndex = 900,
 	}, self.Screen)
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = RGB(255, 255, 255)
-	stroke.Transparency = 0.90
-	stroke.Thickness = 1
-	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	stroke.Parent = frame
-	addShadow(frame, "Medium")
+	local rowLayout = Instance.new("UIListLayout")
+	rowLayout.FillDirection = Enum.FillDirection.Horizontal
+	rowLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	rowLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	rowLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	rowLayout.Padding = UDim.new(0, 8)
+	rowLayout.Parent = frame
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop, padding.PaddingBottom = UDim.new(0, 10), UDim.new(0, 10)
+	padding.PaddingLeft, padding.PaddingRight = UDim.new(0, 10), UDim.new(0, 10)
+	padding.Parent = frame
 
-	
-	local row = new("Frame", {
-		Name = "WmRow", Size = Dim2(0, 0, 1, 0), AutomaticSize = Enum.AutomaticSize.X,
-		BackgroundTransparency = 1,
-	}, frame)
-	local layout = Instance.new("UIListLayout")
-	layout.FillDirection = Enum.FillDirection.Horizontal
-	layout.VerticalAlignment = Enum.VerticalAlignment.Center
-	layout.Padding = UDim.new(0, 6)
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = row
-	local pad = Instance.new("UIPadding")
-	pad.PaddingLeft = UDim.new(0, 10)
-	pad.PaddingRight = UDim.new(0, 10)
-	pad.Parent = row
-
-	
-	makeIxaMark(row, 18, { ZIndex = 2 }).LayoutOrder = 1
-
-	
-	local div1 = new("Frame", { Size = Offset(1, 16), BackgroundColor3 = RGB(255,255,255), BackgroundTransparency = 0.80, ZIndex = 2 }, row)
-	div1.LayoutOrder = 2
-
-	
-	local titleLbl = Instance.new("TextLabel")
-	titleLbl.Text = options.Title or "ixa script"
-	titleLbl.TextSize = 12
-	titleLbl.Font = Enum.Font.BuilderSansBold
-	titleLbl.TextColor3 = RGB(230, 230, 236)
-	titleLbl.TextTransparency = 0
-	titleLbl.BackgroundTransparency = 1
-	titleLbl.AutomaticSize = Enum.AutomaticSize.X
-	titleLbl.Size = Offset(0, 18)
-	titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-	titleLbl.LayoutOrder = 3
-	titleLbl.ZIndex = 2
-	titleLbl.Parent = row
-
-	
-	local div2 = new("Frame", { Size = Offset(1, 16), BackgroundColor3 = RGB(255,255,255), BackgroundTransparency = 0.80, ZIndex = 2 }, row)
-	div2.LayoutOrder = 4
-
-	
-	makeIcon(row, "user", 12, "InactiveText", nil, { ZIndex = 2 }).LayoutOrder = 5
-	local userText = Instance.new("TextLabel")
-	userText.Text = player and player.DisplayName or "Player"
-	userText.TextSize = 11
-	userText.Font = Enum.Font.BuilderSans
-	userText.TextColor3 = RGB(170, 170, 178)
-	userText.BackgroundTransparency = 1
-	userText.AutomaticSize = Enum.AutomaticSize.X
-	userText.Size = Offset(0, 18)
-	userText.TextXAlignment = Enum.TextXAlignment.Left
-	userText.TextTruncate = Enum.TextTruncate.AtEnd
-	userText.LayoutOrder = 6
-	userText.ZIndex = 2
-	userText.Parent = row
-	local dateText = Instance.new("TextLabel")
-	dateText.Text = os.date("%d.%m.%Y %H:%M:%S")
-	dateText.TextSize = 11
-	dateText.Font = Enum.Font.BuilderSans
-	dateText.TextColor3 = RGB(170, 170, 178)
-	dateText.BackgroundTransparency = 1
-	dateText.AutomaticSize = Enum.AutomaticSize.X
-	dateText.Size = Offset(0, 18)
-	dateText.TextXAlignment = Enum.TextXAlignment.Left
-	dateText.LayoutOrder = 7
-	dateText.ZIndex = 2
-	dateText.Parent = row
-	local dateDivider = new("Frame", { Size = Offset(1, 16), BackgroundColor3 = RGB(255,255,255), BackgroundTransparency = 0.80, ZIndex = 2 }, row)
-	dateDivider.LayoutOrder = 8
-	makeIcon(row, "clock", 12, "InactiveText", nil, { ZIndex = 2 }).LayoutOrder = 9
-	local timeText = Instance.new("TextLabel")
-	timeText.Text = os.date("%H:%M:%S")
-	timeText.TextSize = 11
-	timeText.Font = Enum.Font.BuilderSans
-	timeText.TextColor3 = RGB(170, 170, 178)
-	timeText.BackgroundTransparency = 1
-	timeText.AutomaticSize = Enum.AutomaticSize.X
-	timeText.Size = Offset(0, 18)
-	timeText.TextXAlignment = Enum.TextXAlignment.Left
-	timeText.LayoutOrder = 10
-	timeText.ZIndex = 2
-	timeText.Parent = row
-	self.WatermarkClockUpdate = function()
-		dateText.Text = os.date("%d.%m.%Y")
-		timeText.Text = os.date("%H:%M:%S")
+	local function makeCard(name, order, horizontalPadding, spacing)
+		local card = new("Frame", {
+			Name = name, Size = Offset(0, 30), AutomaticSize = Enum.AutomaticSize.X,
+			Bg = "Element", BackgroundTransparency = 0.16, ClipsDescendants = true, LayoutOrder = order, ZIndex = 902,
+		}, frame)
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 8)
+		corner.Parent = card
+		local stroke = Instance.new("UIStroke")
+		stroke.Thickness, stroke.Transparency = 1, 0.45
+		bind(stroke, "Color", "Outline")
+		stroke.Parent = card
+		local glow = new("Frame", { Name = "Glow", Size = Dim2(1, 0, 1, 0), Bg = "Gradient", BackgroundTransparency = 0.82, ZIndex = 902 }, card)
+		local glowCorner = Instance.new("UICorner")
+		glowCorner.CornerRadius = UDim.new(0, 8)
+		glowCorner.Parent = glow
+		local gradient = Instance.new("UIGradient")
+		gradient.Rotation = 90
+		gradient.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(0.6, 0.82), NumberSequenceKeypoint.new(1, 0.9) })
+		gradient.Parent = glow
+		local topLine = new("Frame", { Name = "GlowLine", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(0.5, 0, 0, 1), Size = Dim2(1, -14, 0, 1), Bg = "Gradient", BackgroundTransparency = 0.7, ZIndex = 903 }, card)
+		local lineGradient = Instance.new("UIGradient")
+		lineGradient.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.1), NumberSequenceKeypoint.new(1, 1) })
+		lineGradient.Parent = topLine
+		local body = new("Frame", { Name = "Body", Size = Offset(0, 30), AutomaticSize = Enum.AutomaticSize.X, BackgroundTransparency = 1, ZIndex = 904 }, card)
+		local inset = Instance.new("UIPadding")
+		inset.PaddingLeft, inset.PaddingRight = UDim.new(0, horizontalPadding), UDim.new(0, horizontalPadding)
+		inset.Parent = body
+		local layout = Instance.new("UIListLayout")
+		layout.FillDirection = Enum.FillDirection.Horizontal
+		layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		layout.VerticalAlignment = Enum.VerticalAlignment.Center
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.Padding = UDim.new(0, spacing)
+		layout.Parent = body
+		card.Active = true
+		return card, body
 	end
 
+	local brandCard, brandBody = makeCard("BrandCard", 1, 13, 8)
+	makeIxaMark(brandBody, 16, { ZIndex = 906 }).LayoutOrder = 1
+	local title = new("TextLabel", {
+		Name = "Brand", AutomaticSize = Enum.AutomaticSize.X, Size = Offset(0, 20), BackgroundTransparency = 1,
+		Text = options.Title or "ixa script", TextSize = 14, Weight = Enum.FontWeight.Medium, Fg = "Text", ZIndex = 906,
+	}, brandBody)
+	title.LayoutOrder = 2
+
+	local infoCard, infoBody = makeCard("PlayerCard", 2, 13, 8)
+	local avatar = new("ImageLabel", {
+		Name = "Avatar", Size = Offset(22, 22), BackgroundTransparency = 0.3, Bg = "Background",
+		Image = player and string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150", player.UserId) or "",
+		ScaleType = Enum.ScaleType.Crop, Radius = 99, LayoutOrder = 1, ZIndex = 906,
+	}, infoBody)
+	local avatarStroke = Instance.new("UIStroke")
+	avatarStroke.Thickness, avatarStroke.Transparency = 1, 0.35
+	bind(avatarStroke, "Color", "Outline")
+	avatarStroke.Parent = avatar
+	local userText = new("TextLabel", {
+		Name = "PlayerName", AutomaticSize = Enum.AutomaticSize.X, Size = Offset(0, 20), BackgroundTransparency = 1,
+		Text = player and player.DisplayName or "Player", TextSize = 14, Weight = Enum.FontWeight.Medium, Fg = "Text", ZIndex = 906,
+	}, infoBody)
+	userText.LayoutOrder = 2
+	local function divider(order)
+		local holder = new("Frame", { Name = "Divider", Size = Offset(14, 16), BackgroundTransparency = 1, LayoutOrder = order, ZIndex = 906 }, infoBody)
+		local line = new("Frame", { AnchorPoint = Vec2(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = Offset(1, 16), Bg = "Gradient", BackgroundTransparency = 0.62, ZIndex = 906 }, holder)
+		local fade = Instance.new("UIGradient")
+		fade.Rotation = 90
+		fade.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.85), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 0.85) })
+		fade.Parent = line
+	end
+	divider(3)
+	makeIcon(infoBody, "layout", 15, "InactiveText", "Background", { ZIndex = 906 }).Root.LayoutOrder = 4
+	local fpsText = new("TextLabel", {
+		Name = "Fps", AutomaticSize = Enum.AutomaticSize.X, Size = Offset(0, 20), BackgroundTransparency = 1,
+		Text = "0", TextSize = 14, Weight = Enum.FontWeight.Medium, Fg = "Text", ZIndex = 906,
+	}, infoBody)
+	fpsText.LayoutOrder = 5
+	divider(6)
+	makeIcon(infoBody, "globe", 15, "InactiveText", "Background", { ZIndex = 906 }).Root.LayoutOrder = 7
+	local pingText = new("TextLabel", {
+		Name = "Ping", AutomaticSize = Enum.AutomaticSize.X, Size = Offset(0, 20), BackgroundTransparency = 1,
+		Text = "0ms", TextSize = 14, Weight = Enum.FontWeight.Medium, Fg = "Text", ZIndex = 906,
+	}, infoBody)
+	pingText.LayoutOrder = 8
+	divider(9)
+	makeIxaClock(infoBody, 15, 10)
+	local timeText = new("TextLabel", {
+		Name = "Time", AutomaticSize = Enum.AutomaticSize.X, Size = Offset(0, 20), BackgroundTransparency = 1,
+		Text = os.date("%H:%M"), TextSize = 14, Weight = Enum.FontWeight.Medium, Fg = "Text", ZIndex = 906,
+	}, infoBody)
+	timeText.LayoutOrder = 11
+
+	self.WatermarkClockUpdate = function()
+		if player then userText.Text = player.DisplayName end
+		local okFps, fps = pcall(function() return workspace:GetRealPhysicsFPS() end)
+		if okFps and type(fps) == "number" then fpsText.Text = tostring(math.floor(fps + 0.5)) end
+		local okPing, ping = pcall(function()
+			return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+		end)
+		if okPing and type(ping) == "number" then pingText.Text = tostring(math.floor(ping + 0.5)) .. "ms" end
+		timeText.Text = os.date("%H:%M")
+	end
 	self.Watermark = frame
 	self.WatermarkFader = newFader(frame)
 	self.WatermarkParts = { User = userText }
 	self.WatermarkLayout = function() self:_placeOverlays() end
+	table.insert(self.Connections, frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() self:_placeOverlays() end))
 	self:_makeDraggable(frame, frame)
 end
 
 function Window:_buildHotkeys()
-	
 	local holder = new("Frame", {
-		Name = "IxaKeybindList",
-		AutomaticSize = Enum.AutomaticSize.XY,
-		Size = Offset(0, 0),
-		BackgroundColor3 = RGB(12, 12, 15),
-		BackgroundTransparency = 0.08,
-		Radius = 8,
-		Active = true,
+		Name = "IxaKeybindList", AnchorPoint = Vec2(0, 0.5), Position = UDim2.new(0, 8, 0.5, 0),
+		Size = Offset(0, 0), AutomaticSize = Enum.AutomaticSize.XY, BackgroundTransparency = 1, Active = true, ZIndex = 900,
 	}, self.Screen)
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = RGB(255, 255, 255)
-	stroke.Transparency = 0.90
-	stroke.Thickness = 1
-	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	stroke.Parent = holder
-	addShadow(holder, "Medium")
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Vertical
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, 3)
+	layout.Parent = holder
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop, padding.PaddingBottom = UDim.new(0, 10), UDim.new(0, 10)
+	padding.PaddingLeft, padding.PaddingRight = UDim.new(0, 10), UDim.new(0, 10)
+	padding.Parent = holder
 
-	local pad = Instance.new("UIPadding")
-	pad.PaddingLeft = UDim.new(0, 10)
-	pad.PaddingRight = UDim.new(0, 10)
-	pad.PaddingTop = UDim.new(0, 8)
-	pad.PaddingBottom = UDim.new(0, 8)
-	pad.Parent = holder
+	local function makeCard(parent, name, order, width, height, horizontalPadding, spacing)
+		local card = new("Frame", {
+			Name = name, Size = Offset(width or 0, height), AutomaticSize = width and Enum.AutomaticSize.None or Enum.AutomaticSize.X,
+			Bg = "Element", BackgroundTransparency = 0.16, ClipsDescendants = true, LayoutOrder = order, ZIndex = 902,
+		}, parent)
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 8)
+		corner.Parent = card
+		local stroke = Instance.new("UIStroke")
+		stroke.Thickness, stroke.Transparency = 1, 0.45
+		bind(stroke, "Color", "Outline")
+		stroke.Parent = card
+		local glow = new("Frame", { Name = "Glow", Size = Dim2(1, 0, 1, 0), Bg = "Gradient", BackgroundTransparency = 0.82, ZIndex = 902 }, card)
+		local glowCorner = Instance.new("UICorner")
+		glowCorner.CornerRadius = UDim.new(0, 8)
+		glowCorner.Parent = glow
+		local gradient = Instance.new("UIGradient")
+		gradient.Rotation = 90
+		gradient.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(0.6, 0.82), NumberSequenceKeypoint.new(1, 0.9) })
+		gradient.Parent = glow
+		local line = new("Frame", { AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(0.5, 0, 0, 1), Size = Dim2(1, -14, 0, 1), Bg = "Gradient", BackgroundTransparency = 0.7, ZIndex = 903 }, card)
+		local lineGradient = Instance.new("UIGradient")
+		lineGradient.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.1), NumberSequenceKeypoint.new(1, 1) })
+		lineGradient.Parent = line
+		local body = new("Frame", { Name = "Body", Size = Offset(0, height), AutomaticSize = Enum.AutomaticSize.X, BackgroundTransparency = 1, ZIndex = 904 }, card)
+		local inset = Instance.new("UIPadding")
+		inset.PaddingLeft, inset.PaddingRight = UDim.new(0, horizontalPadding), UDim.new(0, horizontalPadding)
+		inset.Parent = body
+		local rowLayout = Instance.new("UIListLayout")
+		rowLayout.FillDirection = Enum.FillDirection.Horizontal
+		rowLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		rowLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		rowLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		rowLayout.Padding = UDim.new(0, spacing)
+		rowLayout.Parent = body
+		return card, body
+	end
 
-	local vLayout = Instance.new("UIListLayout")
-	vLayout.FillDirection = Enum.FillDirection.Vertical
-	vLayout.Padding = UDim.new(0, 0)
-	vLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	vLayout.Parent = holder
-
-	
-	local head = new("Frame", {
-		Name = "KbHead", Size = Offset(0, 22), AutomaticSize = Enum.AutomaticSize.X,
-		BackgroundTransparency = 1, Active = true, LayoutOrder = 1,
-	}, holder)
-	local headLayout = Instance.new("UIListLayout")
-	headLayout.FillDirection = Enum.FillDirection.Horizontal
-	headLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	headLayout.Padding = UDim.new(0, 6)
-	headLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	headLayout.Parent = head
-
-	makeIcon(head, "key", 12, "Accent", nil, { ZIndex = 2 }).LayoutOrder = 1
-	local titleLbl = Instance.new("TextLabel")
-	titleLbl.Text = "Keybinds"
-	titleLbl.TextSize = 12
-	titleLbl.Font = Enum.Font.BuilderSansBold
-	titleLbl.TextColor3 = RGB(230, 230, 236)
-	titleLbl.BackgroundTransparency = 1
-	titleLbl.AutomaticSize = Enum.AutomaticSize.X
-	titleLbl.Size = Offset(0, 18)
-	titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-	titleLbl.LayoutOrder = 2
-	titleLbl.ZIndex = 2
-	titleLbl.Parent = head
-
-	
-	local sep = new("Frame", {
-		Size = Offset(0, 1), AutomaticSize = Enum.AutomaticSize.X,
-		BackgroundColor3 = RGB(255, 255, 255), BackgroundTransparency = 0.86, LayoutOrder = 2,
-	}, holder)
-	
-	local content = new("Frame", {
-		Name = "KbContent", Size = Offset(0, 0), AutomaticSize = Enum.AutomaticSize.XY,
-		BackgroundTransparency = 1, LayoutOrder = 3,
-	}, holder)
+	local head, headBody = makeCard(holder, "HeaderCard", 1, nil, 36, 14, 8)
+	makeIxaKeyboard(headBody, 17, 1)
+	local title = new("TextLabel", {
+		Name = "Title", AutomaticSize = Enum.AutomaticSize.X, Size = Offset(0, 20), BackgroundTransparency = 1,
+		Text = "hotkeys", TextSize = 14, Weight = Enum.FontWeight.Medium, Fg = "Text", ZIndex = 906,
+	}, headBody)
+	title.LayoutOrder = 2
+	local content = new("Frame", { Name = "KbContent", Size = Offset(0, 0), BackgroundTransparency = 1, LayoutOrder = 2 }, holder)
 	local contentLayout = Instance.new("UIListLayout")
 	contentLayout.FillDirection = Enum.FillDirection.Vertical
-	contentLayout.Padding = UDim.new(0, 2)
 	contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	contentLayout.Padding = UDim.new(0, 0)
 	contentLayout.Parent = content
 
 	self.Hotkeys = holder
+	self.HotkeysHeader = head
+	self.HotkeysSeparator = nil
 	self.HotkeysContent = content
+	self.HotkeysCardBuilder = makeCard
 	self.HotkeysFader = newFader(holder)
 	self:_makeDraggable(head, holder)
 end
-
-
 function Window:_placeOverlays()
 	local size = self.Screen.AbsoluteSize
 	if size.X <= 0 then return end
@@ -3120,11 +3230,11 @@ function Window:_placeOverlays()
 		if not self.VisibilityTransition then self.Holder.Position = self.PanelRestPosition end
 	end
 	if self.Watermark and not self.Moved[self.Watermark] then
-		self.OverlayRest[self.Watermark] = Offset(floor((size.X - self.Watermark.Size.X.Offset) / 2), size.Y - self.Watermark.Size.Y.Offset - 18)
+		self.OverlayRest[self.Watermark] = Offset(size.X - 8, 8)
 		if not self.OverlayAnimating[self.Watermark] then self.Watermark.Position = self.OverlayRest[self.Watermark] end
 	end
 	if self.Hotkeys and not self.Moved[self.Hotkeys] then
-		self.OverlayRest[self.Hotkeys] = Offset(14, floor((size.Y - self.Hotkeys.Size.Y.Offset) / 2))
+		self.OverlayRest[self.Hotkeys] = Offset(8, floor((size.Y - self.Hotkeys.AbsoluteSize.Y) / 2))
 		if not self.OverlayAnimating[self.Hotkeys] and not self.HotkeyLayoutAnimating then self.Hotkeys.Position = self.OverlayRest[self.Hotkeys] end
 	end
 end
@@ -3300,11 +3410,12 @@ function Blossom.new(options)
 		end
 	end))
 
-	local clock, colorClock = 0, 0
+	local clock, colorClock, watermarkClock = 0, 0, 0
 	local function perFrame(dt)
 		clock += dt
 		colorClock += dt
-		if win.WatermarkClockUpdate and clock >= 1 then win.WatermarkClockUpdate() end
+		watermarkClock += dt
+		if win.WatermarkClockUpdate and watermarkClock >= 1 then watermarkClock %= 1; win.WatermarkClockUpdate() end
 		win:_stepSeasonalDecorations(dt)
 		win:_flushThemeColors(dt)
 		if win.OpenDropdown then win.OpenDropdown.Follow() end
