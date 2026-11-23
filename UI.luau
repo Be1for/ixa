@@ -9,7 +9,7 @@ local LOGO_URL    = "https://raw.githubusercontent.com/Be1for/ixa/refs/heads/mai
 local LOGO_PATH   = "ixa_logo.png"   
 local LOGO_ASPECT = 1459 / 1078      
 
-local LOGO_IMAGE = "https://raw.githubusercontent.com/Be1for/ixa/refs/heads/main/logo.png"
+local LOGO_IMAGE = "rbxassetid://122212432133342"
 
 local function _loadLogo()
 
