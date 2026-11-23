@@ -4,14 +4,13 @@ local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 
 local INTER = "rbxassetid://12187365364"
-local IXA_LOGO_URL = "https://raw.githubusercontent.com/Be1for/ixa/refs/heads/main/logo.png"
 local Vec2, Dim2 = Vector2.new, UDim2.new
 local Offset = UDim2.fromOffset
 local RGB = Color3.fromRGB
 local floor, round = math.floor, math.round
 local FULL = 99
 
--- Spacing rule: Pad around every surface, Gap between stacked items. Sizes are even so centring stays on whole pixels.
+
 local Metrics = {
 	Pad = 10, Gap = 6, SectionGap = 10,
 	Radius = 4, SmallRadius = 3, CardRadius = 6, PillRadius = 7, PopupRadius = 7, FloatRadius = 8, WindowRadius = 9,
@@ -115,18 +114,18 @@ local Casing = "Normal"
 local FontFamily = INTER
 local BodyWeight = Enum.FontWeight.SemiBold
 
--------------------------------------------------------------------------------
--- Animator: one render-step loop driving springs. Retargeting keeps velocity,
--- so interrupted motion stays continuous, and it costs far less than TweenService.
--------------------------------------------------------------------------------
+
+
+
+
 
 local Presets = {
-	Fast = { W = 42, Z = 1 },      -- hover and colour feedback
-	Knob = { W = 44, Z = 0.86 },   -- toggles and slider knobs
-	Follow = { W = 34, Z = 1 },    -- things attached to the pointer
-	Smooth = { W = 26, Z = 1 },    -- layout and popups
-	Soft = { W = 19, Z = 1 },      -- page transitions, theme morphs
-	Settle = { W = 24, Z = 0.8 },  -- small overshoot for reflow
+	Fast = { W = 42, Z = 1 },      
+	Knob = { W = 44, Z = 0.86 },   
+	Follow = { W = 34, Z = 1 },    
+	Smooth = { W = 26, Z = 1 },    
+	Soft = { W = 19, Z = 1 },      
+	Settle = { W = 24, Z = 0.8 },  
 }
 
 local Active, Tracks, Jobs = {}, {}, {}
@@ -253,9 +252,9 @@ local function ensureLoop()
 	end)
 end
 
--------------------------------------------------------------------------------
--- Theme, casing and font registries
--------------------------------------------------------------------------------
+
+
+
 
 local Bound, ByKey, Dynamic, Cased, NoFade = {}, {}, {}, {}, {}
 
@@ -393,8 +392,8 @@ local function new(class, props, parent)
 	return inst
 end
 
--- Top-aligned text at a computed whole-pixel offset. Roblox blurs glyphs that land on half pixels,
--- which is what centred alignment produces when the free space is odd.
+
+
 local function capOffset(rowH, size)
 	local capHeight = round(size * 0.7)
 	return math.ceil((rowH - capHeight) / 2 - round(size * 0.16))
@@ -411,14 +410,14 @@ local function label(parent, o)
 	}, parent)
 end
 
--- Centres text inside a fixed width using its measured bounds, floored to a whole pixel.
+
 local function centeredLabel(parent, width, o)
 	o.Truncate = Enum.TextTruncate.AtEnd
 	local text = label(parent, o)
 	local y, rowH = text.Position.Y.Offset, o.RowH or Metrics.Row
 	local function fit()
-		-- The box keeps the full available width. Sizing a truncating label from its own
-		-- bounds shrinks it further each time, because truncated text measures narrower.
+		
+		
 		text.Size = Offset(width - 12, rowH)
 		text.Position = Offset(floor((width - math.min(math.ceil(text.TextBounds.X), width - 12)) / 2), y)
 	end
@@ -438,13 +437,13 @@ local function addGradient(inst)
 	return gradient
 end
 
--- Native UIShadow styles, fitted to the original: a CSS-like blur (2 sigma) with Spread split across both sides.
+
 local Shadows = {
-	Large = { Blur = 10, Spread = 0, Transparency = 0.3 },    -- window and popup windows
-	PickerKnob = { Blur = 6, Spread = 6, Transparency = 0.5 }, -- colour picker knobs only
+	Large = { Blur = 10, Spread = 0, Transparency = 0.3 },    
+	PickerKnob = { Blur = 6, Spread = 6, Transparency = 0.5 }, 
 }
 
--- UIShadow is still rolling out, so clients without it simply draw no shadow.
+
 local ShadowsAvailable = pcall(function() Instance.new("UIShadow"):Destroy() end)
 
 local function addShadow(inst, style)
@@ -469,8 +468,8 @@ local function isClick(input)
 	return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
 end
 
--- AbsolutePosition and GetMouseLocation use different origins whenever a top bar inset exists.
--- Offsetting by the ScreenGui's own AbsolutePosition puts the pointer in AbsolutePosition space.
+
+
 local ScreenRef
 
 local function mousePos()
@@ -489,7 +488,7 @@ local function inside(frame, point, margin)
 	return point.X >= p.X - margin and point.X <= p.X + s.X + margin and point.Y >= p.Y - margin and point.Y <= p.Y + s.Y + margin
 end
 
--- Polls once per rendered frame, so dragging costs one update per frame however fast the mouse reports.
+
 local function beginDrag(onMove, onEnd, onFrame)
 	local last
 	local function job(dt)
@@ -513,8 +512,8 @@ local function beginDrag(onMove, onEnd, onFrame)
 	end)
 end
 
--- Roblox skips MouseLeave on fast movement and fires MouseEnter for covered objects, so hover
--- is confirmed against the pointer every frame instead of trusting those events alone.
+
+
 local Focus
 local HoverSet = {}
 
@@ -567,9 +566,9 @@ function sweepHover()
 	end
 end
 
--------------------------------------------------------------------------------
--- Fader: one animated alpha drives every transparency beneath a root
--------------------------------------------------------------------------------
+
+
+
 
 local Fader = {}
 Fader.__index = Fader
@@ -581,7 +580,7 @@ end
 local function captureFade(root)
 	local entries = {}
 	local function add(inst, prop)
-		-- A value that's still animating would be restored stale when the fade ends.
+		
 		if NoFade[inst] or (Tracks[inst] and Tracks[inst][prop]) then return end
 		local base = inst[prop]
 		if base < 1 then table.insert(entries, { inst, prop, base }) end
@@ -641,10 +640,10 @@ function Fader:Hide(onDone, preset)
 	})
 end
 
--------------------------------------------------------------------------------
--- Icons: drawn from frames on a 16x16 grid, so no decals have to be uploaded
--- { kind, x, y, w, h, radius, rotation }   kind: f = fill, h = hole, r = ring
--------------------------------------------------------------------------------
+
+
+
+
 
 local Icons = {
 	target = { { "f", 0.5, 0.5, 15, 15, FULL }, { "h", 3, 3, 10, 10, FULL }, { "f", 4.8, 4.8, 6.4, 6.4, FULL } },
@@ -743,7 +742,22 @@ local function makeIcon(parent, name, size, color, hole, props)
 	return icon
 end
 
--- Hover and press colours resolved through the theme, so a theme change can't strand a stale colour.
+local function makeIxaMark(parent, size, props)
+	props = props or {}
+	local root = new("Frame", { Name = "IxaMark", Size = Offset(size, size), Position = props.Position, AnchorPoint = props.AnchorPoint, ZIndex = props.ZIndex }, parent)
+	local rows = { { 2, 9 }, { 5, 13 }, { 8, 13 }, { 11, 13 }, { 14, 10 } }
+	for index, row in rows do
+		new("Frame", {
+			Position = Offset(1, round(row[1] * size / 18)),
+			Size = Offset(round(row[2] * size / 18), math.max(1, round(1.8 * size / 18))),
+			Bg = function() return Current.Accent:Lerp(Current.Gradient, (index - 1) / (#rows - 1) * 0.35) end,
+			Radius = 1, ZIndex = props.ZIndex,
+		}, root)
+	end
+	return root
+end
+
+
 local function interactive(target, base, hover, press, handle)
 	local state = { Hover = false, Press = false }
 	local source = handle or target
@@ -760,9 +774,9 @@ local function interactive(target, base, hover, press, handle)
 	return state
 end
 
--------------------------------------------------------------------------------
--- Classes
--------------------------------------------------------------------------------
+
+
+
 
 local Window, Tab, Section, Column = {}, {}, {}, {}
 Window.__index, Tab.__index, Section.__index, Column.__index = Window, Tab, Section, Column
@@ -793,7 +807,7 @@ local function makeChip(parent, text, anchorRight, outerHeight)
 	return chip, caption
 end
 
--- Sizes a chip around its text. Widths given to onFit are outer widths, borders included.
+
 local function fitChip(chip, text, minimum, onFit)
 	local height = chip.Size.Y.Offset
 	local function apply(bounds)
@@ -809,7 +823,7 @@ local function fitChip(chip, text, minimum, onFit)
 	return apply, fit
 end
 
--- Click a slider amount to type a value; Enter or clicking away commits, anything non-numeric reverts.
+
 local function makeEditable(chip, text, read, write, apply, fit)
 	local height = chip.Size.Y.Offset
 	local hit = new("TextButton", { Size = Dim2(1, 0, 1, 0), ZIndex = 2 }, chip)
@@ -844,9 +858,9 @@ local function makeEditable(chip, text, read, write, apply, fit)
 	end)
 end
 
--------------------------------------------------------------------------------
--- Column
--------------------------------------------------------------------------------
+
+
+
 
 function Column:Layout(animated)
 	local y = 0
@@ -863,7 +877,7 @@ function Column:Layout(animated)
 end
 
 function Column:ClampScroll()
-	-- Uses the window's own height so it's right on the same frame as a resize.
+	
 	self.Target = math.clamp(self.Target, 0, math.max(0, self.ContentH - (self.Tab.Window.Height - Metrics.Pad * 2)))
 end
 
@@ -873,9 +887,9 @@ function Column:ScrollTo(y)
 	animate(self.Scroll, "CanvasPosition", Vec2(0, self.Target), "Soft")
 end
 
--------------------------------------------------------------------------------
--- Section
--------------------------------------------------------------------------------
+
+
+
 
 function Section:Layout(animated)
 	local y, any = Metrics.Pad, false
@@ -994,7 +1008,7 @@ local function addInlineControls(section, item, options, name)
 	return keybind, color
 end
 
--- Every element joins configs automatically under Tab/Section/Name unless NoSave is set.
+
 local function register(section, object, options, item)
 	local win = section.Window
 	win.FlagOwners[item] = object
@@ -1142,7 +1156,7 @@ local function knobPixels(alpha, width)
 	return round(Metrics.TrackInset + alpha * (width - Metrics.TrackInset * 2))
 end
 
--- Pixel positions keep the knob centred exactly: the same overhang above and below the track.
+
 local function placeKnob(knob, pixels, animated)
 	place(knob, "Position", Offset(pixels - floor(Metrics.Knob / 2), floor((Metrics.TrackH - 2 - Metrics.Knob) / 2)), animated, "Follow")
 end
@@ -1277,7 +1291,7 @@ function Section:RangeSlider(options)
 	return range
 end
 
--- The option list is its own floating panel above the UI, so opening it never moves the section.
+
 local function buildDropdown(win, parent, options)
 	local dropdown = {
 		Options = options.Options or {}, Multi = options.Multi == true, Open = false,
@@ -1319,8 +1333,8 @@ local function buildDropdown(win, parent, options)
 		return #names > 0 and table.concat(names, ", ") or "None"
 	end
 
-	-- Selection, hover and the panel's reveal are separate numbers combined on every write.
-	-- Nothing stores a transparency to restore later, so interrupted animations can't leave stale rows.
+	
+	
 	local function applyRow(row)
 		local reveal = dropdown.Reveal
 		row.Button.BackgroundTransparency = 1 - math.max(row.Sel, row.Hov) * reveal
@@ -1401,7 +1415,7 @@ local function buildDropdown(win, parent, options)
 		panelH = math.clamp(#dropdown.Options, 1, options.MaxRows or 10) * Metrics.ListRowH
 	end
 
-	-- Called each frame while open, so the panel stays attached while the page scrolls or the window moves.
+	
 	local function follow()
 		local p, s = input.AbsolutePosition, input.AbsoluteSize
 		local screen = win.Screen.AbsolutePosition.Y + win.Screen.AbsoluteSize.Y
@@ -1467,7 +1481,7 @@ local function buildDropdown(win, parent, options)
 
 	dropdown.Input, dropdown.Panel = input, panel
 	input.MouseButton1Click:Connect(function()
-		-- The press that closes an open list must not reopen it on release.
+		
 		if win.DropdownClosedBy == input and os.clock() - win.DropdownClosedAt < 0.25 then return end
 		dropdown:Toggle()
 	end)
@@ -1603,7 +1617,7 @@ function Section:_beginDrag()
 		for position, other in column.Sections do
 			if other ~= self then
 				local middle = column.Scroll.AbsolutePosition.Y - column.Scroll.CanvasPosition.Y + other.Y + other.TotalH / 2
-				-- A dead zone either side of each midpoint stops sections trading places repeatedly.
+				
 				local bias = (current and position < current) and -14 or 14
 				if point.Y > middle + bias then index += 1 end
 			end
@@ -1651,7 +1665,7 @@ function Section:_beginDrag()
 
 	local function frame(point)
 		if not lifted then return end
-		-- Scroll the column while the pointer rests near its top or bottom edge.
+		
 		local column = self.Column
 		local scroll = column.Scroll
 		local top, bottom = scroll.AbsolutePosition.Y, scroll.AbsolutePosition.Y + scroll.AbsoluteSize.Y
@@ -1684,9 +1698,9 @@ function Section:_beginDrag()
 	end, frame)
 end
 
--------------------------------------------------------------------------------
--- Tab
--------------------------------------------------------------------------------
+
+
+
 
 function Tab:Section(options)
 	local win = self.Window
@@ -1721,9 +1735,9 @@ function Tab:Section(options)
 	return section
 end
 
--------------------------------------------------------------------------------
--- Window
--------------------------------------------------------------------------------
+
+
+
 
 local function guiParent(screen)
 	local ok = false
@@ -1928,7 +1942,7 @@ function Window:Notify(options)
 	end
 	stack()
 	entry.Fader:Show()
-	-- Rapid actions shouldn't bury the screen.
+	
 	if #self.NotifyStack > 6 then self.NotifyStack[#self.NotifyStack].Dismiss() end
 	task.delay(options.Duration or 3, entry.Dismiss)
 end
@@ -1938,7 +1952,7 @@ function Window:ApplyTheme(name, silent)
 	if not theme then return end
 	for key, value in theme do Current[key] = value end
 	self.ThemeName = name
-	-- Off-screen pages take the new colours immediately, so only what's visible animates.
+	
 	local hidden = {}
 	for _, tab in self.Tabs do
 		if tab ~= self.CurrentTab then
@@ -1961,63 +1975,94 @@ local function outlineShape(shape, color, thickness, transparency)
 	return stroke
 end
 
-local function seasonalShape(parent, name, x, y, width, height, color, radius, rotation, zIndex)
+local function seasonalShape(parent, name, x, y, width, height, color, radius, rotation, zIndex, transparency)
 	return new("Frame", {
 		Name = name, Position = Offset(x, y), Size = Offset(width, height),
-		BackgroundColor3 = color, BackgroundTransparency = 0, Radius = radius or FULL,
+		BackgroundColor3 = color, BackgroundTransparency = transparency or 0, Radius = radius or FULL,
 		Rotation = rotation or 0, ZIndex = zIndex or 35,
 	}, parent)
 end
 
 local function buildHalloweenIcon(parent, kind, x, y, index)
+	local iconSize = kind == "Broom" and 66 or 54
 	local root = new("Frame", {
-		Name = kind .. "Icon", Position = UDim2.fromScale(x, y), Size = Offset(42, 42),
-		BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 34,
+		Name = kind .. "Silhouette", Position = UDim2.fromScale(x, y), Size = Offset(iconSize, iconSize),
+		BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 1,
 	}, parent)
 	root:SetAttribute("FloatIndex", index)
 	root:SetAttribute("BaseX", x)
 	root:SetAttribute("BaseY", y)
-	local ink = RGB(39, 22, 48)
 	if kind == "Pumpkin" then
-		local orange, deepOrange = RGB(255, 137, 48), RGB(185, 68, 31)
-		local left = seasonalShape(root, "PumpkinRib", 2, 15, 18, 21, orange, FULL, 0, 35)
-		local right = seasonalShape(root, "PumpkinRib", 22, 15, 18, 21, orange, FULL, 0, 35)
-		outlineShape(left, deepOrange, 1.2, 0.08)
-		outlineShape(right, deepOrange, 1.2, 0.08)
-		local body = seasonalShape(root, "PumpkinBody", 8, 12, 27, 26, orange, FULL, 0, 36)
-		outlineShape(body, deepOrange, 1.3, 0.02)
-		seasonalShape(root, "PumpkinStem", 19, 5, 7, 11, RGB(104, 166, 82), 3, 8, 37)
-		seasonalShape(root, "PumpkinLeaf", 25, 7, 9, 5, RGB(132, 184, 91), FULL, -27, 38)
-		seasonalShape(root, "CarvedEye", 15, 21, 5, 6, ink, 1, 45, 39)
-		seasonalShape(root, "CarvedEye", 27, 21, 5, 6, ink, 1, 45, 39)
-		seasonalShape(root, "CarvedSmile", 18, 31, 3, 3, ink, 1, 0, 39)
-		seasonalShape(root, "CarvedSmile", 22, 33, 4, 3, ink, 1, 0, 39)
-		seasonalShape(root, "CarvedSmile", 27, 31, 3, 3, ink, 1, 0, 39)
-		seasonalShape(root, "PumpkinHighlight", 11, 17, 2, 8, RGB(255, 190, 104), 2, 8, 38)
-	else
-		local ghost = RGB(239, 240, 255)
-		local head = seasonalShape(root, "GhostHead", 8, 4, 26, 26, ghost, FULL, 0, 35)
-		local body = seasonalShape(root, "GhostBody", 7, 17, 28, 16, ghost, 7, 0, 36)
-		outlineShape(head, RGB(178, 151, 234), 1.4, 0.02)
-		outlineShape(body, RGB(178, 151, 234), 1.4, 0.02)
-		for i = 1, 3 do seasonalShape(root, "GhostHem", 6 + (i - 1) * 10, 27, 11, 10, ghost, FULL, 0, 37) end
-		seasonalShape(root, "GhostEye", 15, 16, 4, 6, ink, FULL, 0, 39)
-		seasonalShape(root, "GhostEye", 24, 16, 4, 6, ink, FULL, 0, 39)
-		seasonalShape(root, "GhostMouth", 20, 23, 4, 4, RGB(120, 74, 130), FULL, 0, 39)
-		seasonalShape(root, "GhostCheek", 11, 23, 4, 2, RGB(255, 156, 175), FULL, 0, 39)
-		seasonalShape(root, "GhostCheek", 28, 23, 4, 2, RGB(255, 156, 175), FULL, 0, 39)
+		local shade, edge = RGB(87, 47, 42), RGB(151, 93, 75)
+		local left = seasonalShape(root, "PumpkinRib", 4, 22, 21, 24, shade, FULL, 0, 1, 0.52)
+		local right = seasonalShape(root, "PumpkinRib", 28, 22, 21, 24, shade, FULL, 0, 1, 0.52)
+		outlineShape(left, edge, 1, 0.58)
+		outlineShape(right, edge, 1, 0.58)
+		local body = seasonalShape(root, "PumpkinBody", 13, 18, 32, 30, shade, FULL, 0, 1, 0.45)
+		outlineShape(body, edge, 1, 0.5)
+		seasonalShape(root, "PumpkinStem", 26, 8, 8, 15, RGB(61, 73, 53), 3, 9, 1, 0.44)
+		seasonalShape(root, "PumpkinEye", 21, 29, 5, 8, RGB(28, 20, 31), 2, 18, 1, 0.12)
+		seasonalShape(root, "PumpkinEye", 34, 29, 5, 8, RGB(28, 20, 31), 2, -18, 1, 0.12)
+		seasonalShape(root, "PumpkinMouth", 25, 41, 11, 3, RGB(28, 20, 31), 2, 0, 1, 0.18)
+	elseif kind == "Ghost" then
+		local shade, edge = RGB(127, 118, 145), RGB(183, 167, 198)
+		local tail = seasonalShape(root, "GhostShroud", 12, 26, 33, 25, shade, 13, 0, 1, 0.65)
+		local head = seasonalShape(root, "GhostHead", 16, 8, 26, 30, shade, FULL, 0, 1, 0.61)
+		outlineShape(head, edge, 1, 0.66)
+		outlineShape(tail, edge, 1, 0.72)
+		seasonalShape(root, "GhostEye", 23, 26, 4, 8, RGB(35, 27, 42), FULL, -5, 1, 0.2)
+		seasonalShape(root, "GhostEye", 34, 26, 4, 8, RGB(35, 27, 42), FULL, 5, 1, 0.2)
+	elseif kind == "Skull" then
+		local bone, edge, ink = RGB(135, 127, 145), RGB(190, 175, 201), RGB(37, 28, 45)
+		local cranium = seasonalShape(root, "SkullCranium", 11, 5, 34, 31, bone, 15, 0, 1, 0.58)
+		local jaw = seasonalShape(root, "SkullJaw", 16, 28, 24, 17, bone, 5, 0, 1, 0.55)
+		outlineShape(cranium, edge, 1, 0.62)
+		outlineShape(jaw, edge, 1, 0.68)
+		seasonalShape(root, "SkullSocket", 17, 20, 9, 10, ink, FULL, 0, 1, 0.12)
+		seasonalShape(root, "SkullSocket", 31, 20, 9, 10, ink, FULL, 0, 1, 0.12)
+		seasonalShape(root, "SkullNose", 26, 31, 4, 5, ink, 1, 45, 1, 0.15)
+		for i = 1, 4 do seasonalShape(root, "SkullTooth", 19 + (i - 1) * 5, 38, 2, 6, edge, 1, 0, 1, 0.28) end
+	elseif kind == "Broom" then
+		local wood, straw = RGB(105, 79, 67), RGB(93, 77, 64)
+		seasonalShape(root, "BroomHandle", 31, 5, 3, 53, wood, 2, 28, 1, 0.48)
+		for i = 1, 7 do
+			seasonalShape(root, "BroomStraw", 12 + i * 4, 35 + math.abs(4 - i) * 2, 3, 22 - math.abs(4 - i) * 2, straw, 2, 20 + (i - 4) * 5, 1, 0.45)
+		end
 	end
 	return root
+end
+
+local function buildHalloweenWeb(parent)
+	local web = new("Frame", { Name = "Spiderweb", AnchorPoint = Vec2(1, 0), Position = Dim2(1, -2, 0, 2), Size = Offset(88, 88), BackgroundTransparency = 1, ZIndex = 1 }, parent)
+	local color, origin = RGB(166, 153, 184), Vec2(88, 0)
+	local rays = { Vec2(8, 0), Vec2(34, 3), Vec2(66, 16), Vec2(87, 42), Vec2(86, 77) }
+	local function line(x1, y1, x2, y2, alpha, width)
+		local dx, dy = x2 - x1, y2 - y1
+		local segment = new("Frame", {
+			Name = "WebThread", AnchorPoint = Vec2(0.5, 0.5), Position = Offset((x1 + x2) / 2, (y1 + y2) / 2),
+			Size = Offset(math.sqrt(dx * dx + dy * dy), width or 1), Rotation = math.deg(math.atan2(dy, dx)),
+			BackgroundColor3 = color, BackgroundTransparency = alpha, ZIndex = 1,
+		}, web)
+		return segment
+	end
+	for _, point in rays do line(origin.X, origin.Y, point.X, point.Y, 0.62, 1) end
+	for _, radius in { 0.25, 0.48, 0.71, 0.94 } do
+		for index = 1, #rays - 1 do
+			local first, second = rays[index], rays[index + 1]
+			line(origin.X + (first.X - origin.X) * radius, origin.Y + (first.Y - origin.Y) * radius, origin.X + (second.X - origin.X) * radius, origin.Y + (second.Y - origin.Y) * radius, 0.68, 1)
+		end
+	end
+	return web
 end
 
 function Window:_buildSeasonalDecorations()
 	local fx = new("Frame", {
 		Name = "SeasonalFX", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1,
-		ClipsDescendants = true, Active = false, Selectable = false, ZIndex = 30,
+		ClipsDescendants = true, Active = false, Selectable = false, ZIndex = 1,
 	}, self.Root)
 	self.SeasonFX = fx
-	local winterFx = new("Frame", { Name = "WinterLayer", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 31, Visible = false }, fx)
-	local halloweenFx = new("Frame", { Name = "HalloweenLayer", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 31, Visible = false }, fx)
+	local winterFx = new("Frame", { Name = "WinterLayer", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 30, Visible = false }, fx)
+	local halloweenFx = new("Frame", { Name = "HalloweenLayer", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 1, Visible = false }, fx)
 	self.WinterFader, self.HalloweenFader = newFader(winterFx), newFader(halloweenFx)
 	self.SeasonSnow, self.SeasonLights, self.SeasonGhosts, self.GarlandSegments = {}, {}, {}, {}
 	local lightColors = { RGB(255, 82, 91), RGB(255, 194, 78), RGB(92, 234, 159), RGB(104, 179, 255), RGB(255, 126, 204) }
@@ -2033,25 +2078,30 @@ function Window:_buildSeasonalDecorations()
 		local x = 0.045 + (i - 1) * 0.076
 		local nodeY = 4 + math.sin((i - 1) / 12 * math.pi) * 12
 		local color = lightColors[(i - 1) % #lightColors + 1]
+		local outerGlow = new("Frame", {
+			Name = "BulbBloomOuter", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 4),
+			Size = Offset(22, 24), Radius = FULL, BackgroundColor3 = color, BackgroundTransparency = 0.91, ZIndex = 33,
+		}, winterFx)
 		local glow = new("Frame", {
-			Name = "BulbGlow", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 7),
-			Size = Offset(17, 19), Radius = FULL, BackgroundColor3 = color, BackgroundTransparency = 0.62, ZIndex = 33,
+			Name = "BulbBloom", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 5),
+			Size = Offset(13, 16), Radius = FULL, BackgroundColor3 = color, BackgroundTransparency = 0.62, ZIndex = 34,
 		}, winterFx)
 		local socket = new("Frame", {
 			Name = "BulbSocket", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 1),
-			Size = Offset(4, 7), Radius = 2, BackgroundColor3 = RGB(59, 83, 63), ZIndex = 34,
+			Size = Offset(3, 5), Radius = 2, BackgroundColor3 = RGB(59, 83, 63), ZIndex = 35,
 		}, winterFx)
 		local bulb = new("Frame", {
-			Name = "GarlandBulb", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 6),
-			Size = Offset(8, 11), Radius = FULL, BackgroundColor3 = color, ZIndex = 35,
+			Name = "GarlandBulb", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 5),
+			Size = Offset(5, 7), Radius = FULL, BackgroundColor3 = color, ZIndex = 36,
 		}, winterFx)
 		outlineShape(bulb, color:Lerp(Color3.new(1, 1, 1), 0.38), 0.8, 0.12)
 		bulb:SetAttribute("LightIndex", i)
 		bulb:SetAttribute("BaseX", x)
 		bulb:SetAttribute("BulbColor", color)
 		glow:SetAttribute("LightIndex", i)
+		outerGlow:SetAttribute("LightIndex", i)
 		socket:SetAttribute("LightIndex", i)
-		table.insert(self.SeasonLights, { Bulb = bulb, Glow = glow, Socket = socket, X = x, Color = color })
+		table.insert(self.SeasonLights, { Bulb = bulb, Glow = glow, OuterGlow = outerGlow, Socket = socket, X = x, Color = color })
 	end
 	for i = 1, 12 do
 		local snow = new("TextLabel", {
@@ -2063,10 +2113,12 @@ function Window:_buildSeasonalDecorations()
 		snow:SetAttribute("SnowIndex", i)
 		table.insert(self.SeasonSnow, snow)
 	end
-	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Ghost", 0.025, 0.12, 1))
-	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Pumpkin", 0.895, 0.12, 2))
-	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Pumpkin", 0.025, 0.84, 3))
-	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Ghost", 0.895, 0.84, 4))
+	buildHalloweenWeb(halloweenFx)
+	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Ghost", 0.035, 0.14, 1))
+	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Pumpkin", 0.84, 0.13, 2))
+	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Skull", 0.06, 0.78, 3))
+	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Broom", 0.79, 0.75, 4))
+	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Pumpkin", 0.44, 0.83, 5))
 	self.SeasonClock = 0
 	self:_updateSeasonalDecorations(self.ThemeName)
 end
@@ -2076,6 +2128,7 @@ function Window:_updateSeasonalDecorations(name)
 	if not fx then return end
 	fx.Visible = true
 	local winter, halloween = name == "Winter", name == "Halloween"
+	if self.Content then animate(self.Content, "BackgroundTransparency", halloween and 0.12 or 0, "Soft") end
 	if winter and not self.WinterFader.Root.Visible then self.WinterFader:Show(nil, "Soft")
 	elseif not winter and self.WinterFader.Root.Visible then self.WinterFader:Hide(nil, "Smooth") end
 	if halloween and not self.HalloweenFader.Root.Visible then self.HalloweenFader:Show(nil, "Soft")
@@ -2111,15 +2164,18 @@ function Window:_stepSeasonalDecorations(dt)
 		for _, light in self.SeasonLights do
 			local index = light.Bulb:GetAttribute("LightIndex")
 			local pulse = 0.52 + 0.48 * (0.5 + 0.5 * math.sin(clock * 2.8 + index * 0.91))
-			local sway = math.sin(clock * 1.35 + index * 0.7) * 0.8
+			local sway = math.sin(clock * 1.35 + index * 0.7) * 1.6
 			local y = garlandY((index - 1) / 12)
 			light.Socket.Position = UDim2.new(light.X, sway, 0, y + 1)
-			light.Bulb.Position = UDim2.new(light.X, sway, 0, y + 6)
-			light.Glow.Position = UDim2.new(light.X, sway, 0, y + 7)
-			light.Bulb.BackgroundColor3 = light.Color:Lerp(Color3.new(1, 1, 1), pulse * 0.28)
-			light.Bulb.BackgroundTransparency = 0.06 + (1 - pulse) * 0.24
-			light.Glow.BackgroundTransparency = 0.83 - pulse * 0.48
-			light.Bulb.Size = Offset(7 + pulse * 1.3, 10 + pulse * 1.5)
+			light.Bulb.Position = UDim2.new(light.X, sway, 0, y + 5)
+			light.Glow.Position = UDim2.new(light.X, sway, 0, y + 5)
+			light.OuterGlow.Position = UDim2.new(light.X, sway, 0, y + 4)
+			light.Bulb.BackgroundColor3 = light.Color:Lerp(Color3.new(1, 1, 1), 0.34 + pulse * 0.34)
+			light.Bulb.BackgroundTransparency = 0.02 + (1 - pulse) * 0.1
+			light.Glow.BackgroundTransparency = 0.76 - pulse * 0.45
+			light.OuterGlow.BackgroundTransparency = 0.95 - pulse * 0.12
+			light.Bulb.Size = Offset(5, 7)
+			light.Bulb.Rotation = math.sin(clock * 1.35 + index * 0.7) * 4
 		end
 	elseif self.ThemeName == "Halloween" then
 		for _, accent in self.SeasonGhosts do
@@ -2131,7 +2187,7 @@ function Window:_stepSeasonalDecorations(dt)
 	end
 end
 
--- Dragging a theme colour would otherwise repaint hundreds of instances per mouse movement.
+
 function Window:SetThemeColor(key, color)
 	Current[key] = color
 	self.PendingThemeKeys[key] = true
@@ -2227,13 +2283,13 @@ function Window:_modalPosition(offsetY)
 	return Offset(floor((self.Width - 420) / 2), floor((self.Height - 340) / 2) + offsetY)
 end
 
--- Sizes stay even so a centre anchor still lands on whole pixels.
+
 local function evenClamp(value, minimum, maximum)
 	local clamped = math.clamp(floor(value), minimum, math.max(minimum, maximum))
 	return clamped - clamped % 2
 end
 
--- The tab list and search box must both fit, however many tabs were added.
+
 function Window:_minHeight()
 	local needed = math.ceil(self.SidebarY + Metrics.TabH / 2 + Metrics.Gap + Metrics.SearchH + Metrics.Pad)
 	return evenClamp(math.max(self.MinSize.Y, needed + needed % 2), 0, math.huge)
@@ -2260,7 +2316,7 @@ function Window:_applySize(width, height)
 	if self.Search and not self.Search.Open then self.Search.Modal.Position = self:_modalPosition(0) end
 end
 
--- Resizes from code, keeping the window's top-left corner where it is.
+
 function Window:SetSize(width, height)
 	width = evenClamp(width, self.MinSize.X, math.huge)
 	height = evenClamp(height, self:_minHeight(), math.huge)
@@ -2329,7 +2385,7 @@ function Window:_makeDraggable(handle, target, allowed)
 	end)
 end
 
--- Input can reach the window background through anything above it, so check the pointer directly.
+
 function Window:_overControl(point)
 	if self.Search.Open then return true end
 	if self.OpenDropdown and inside(self.OpenDropdown.Panel, point) then return true end
@@ -2355,7 +2411,7 @@ end
 
 function Window:_popupFrame(width, height)
 	local wrapper = new("Frame", { Size = Offset(width, height), Visible = false, Active = true }, self.Popups)
-	-- A button, so nothing beneath the popup can take the click.
+	
 	local body = new("TextButton", { Bg = "Background", Size = Dim2(1, 0, 1, 0), Radius = Metrics.PopupRadius, Border = "Outline" }, wrapper)
 	addShadow(body, "Large")
 	local controls = {}
@@ -2436,7 +2492,7 @@ function Window:_buildPicker()
 	end
 	local svKnob = ringKnob(sv)
 	picker.SVKnob = svKnob
-	-- The knob's centre travels 6px inside each edge, matching the original.
+	
 	local INSET = (Metrics.PickerKnob + 4) / 2 - 1
 	local function along(scale) return round(INSET - INSET * 2 * scale) end
 	local function fromPointer(position, origin, length)
@@ -2452,8 +2508,8 @@ function Window:_buildPicker()
 	local hueKnob = ringKnob(hue)
 
 	local alphaBar = new("Frame", { Bg = "Background", Position = Offset(pad + 1, alphaY + 1), Size = Offset(width - pad * 2 - 2, barW - 2), Radius = Metrics.Radius, Border = "Outline" }, body)
-	-- A CanvasGroup is the only container whose UICorner clips its children, so the square
-	-- checker cells stay inside the rounded ends.
+	
+	
 	local alphaClip = new("CanvasGroup", { Name = "AlphaClip", BackgroundTransparency = 0, BackgroundColor3 = Color3.new(1, 1, 1), Size = Dim2(1, 0, 1, 0), Radius = Metrics.Radius }, alphaBar)
 	for column = 0, 48 do
 		for row = 0, 2 do
@@ -2498,7 +2554,7 @@ function Window:_buildPicker()
 		if picker.Animation then picker.Animation:Set(target.Animation or "None", true) end
 	end
 
-	-- Each hit area overhangs its control so knobs resting on an edge can still be grabbed.
+	
 	local function dragArea(area, knob, update)
 		local hit = new("TextButton", { Position = Offset(-6, -6), Size = Dim2(1, 12, 1, 12), ZIndex = 5 }, area)
 		hit.InputBegan:Connect(function(input)
@@ -2592,7 +2648,7 @@ function Window:_buildSearch()
 		return row
 	end
 
-	-- Rows are matched to results and reused, so a keystroke only touches what actually changed.
+	
 	local function sync()
 		local text = box.Text
 		setText(title, text ~= "" and text or "Search")
@@ -2695,30 +2751,26 @@ function Window:SetVisible(visible)
 	end
 	local basePosition = self.PanelRestPosition or self.Holder.Position
 	local transitionOffset = Offset(0, 9)
+	local remaining = 2
+	local function finishTransition()
+		remaining -= 1
+		if remaining > 0 or generation ~= self.VisibilityGeneration then return end
+		if visible then
+			self.Scale.Parent = nil
+		else
+			self.Holder.Visible = false
+			self.Scale.Parent = nil
+		end
+		self.VisibilityTransition = false
+	end
 	if visible then
 		if not self.Holder.Visible then snap(self.Holder, "Position", basePosition + transitionOffset) end
 		self.Holder.Visible = true
-		animate(self.Root, "GroupTransparency", 0, "Smooth", {
-			Done = function()
-				if generation == self.VisibilityGeneration and self.Visible then
-					self.Scale.Parent = nil
-					self.VisibilityTransition = false
-				end
-			end,
-		})
-		animate(self.Holder, "Position", basePosition, "Smooth")
-		animate(self.Scale, "Scale", 1, "Smooth")
+		animate(self.Holder, "Position", basePosition, "Smooth", { Done = finishTransition })
+		animate(self.Scale, "Scale", 1, "Smooth", { Done = finishTransition })
 	else
-		animate(self.Root, "GroupTransparency", 1, "Smooth", {
-			Done = function()
-				if generation ~= self.VisibilityGeneration or self.Visible then return end
-				self.Holder.Visible = false
-				self.Scale.Parent = nil
-				self.VisibilityTransition = false
-			end,
-		})
-		animate(self.Holder, "Position", basePosition + transitionOffset, "Smooth")
-		animate(self.Scale, "Scale", 0.94, "Smooth")
+		animate(self.Holder, "Position", basePosition + transitionOffset, "Smooth", { Done = finishTransition })
+		animate(self.Scale, "Scale", 0.94, "Smooth", { Done = finishTransition })
 	end
 end
 
@@ -2915,7 +2967,7 @@ function Window:_buildWatermark(options)
 	local gradient = new("UIGradient", { Rotation = 18 }, frame)
 	bind(gradient, "Color", function() return ColorSequence.new(Current.Tab, Current.Background) end)
 	new("Frame", { Bg = "Accent", Position = Offset(10, 0), Size = Offset(86, 2), Radius = FULL }, frame)
-	makeIcon(frame, IXA_LOGO_URL, 20, "Accent", "Background", { Position = Offset(13, 9) })
+	makeIxaMark(frame, 20, { Position = Offset(13, 9) })
 	label(frame, { Text = options.Title or "ixa script", TextSize = 15, Weight = Enum.FontWeight.Bold, X = 42, Y = 4, RowH = 26, W = 180 })
 	local status = new("Frame", { Bg = "Inline", Position = Offset(289, 9), Size = Offset(56, 20), Radius = FULL }, frame)
 	new("Frame", { Bg = "Accent", Position = Offset(7, 7), Size = Offset(6, 6), Radius = FULL }, status)
@@ -2951,7 +3003,7 @@ function Window:_buildHotkeys()
 	self:_makeDraggable(head, holder)
 end
 
--- Everything anchored to the screen is placed at whole pixels, the main defence against blurry text.
+
 function Window:_placeOverlays()
 	local size = self.Screen.AbsoluteSize
 	if size.X <= 0 then return end
@@ -3026,15 +3078,16 @@ function Blossom.new(options)
 	}, screen)
 	win.Holder = holder
 	win.Scale = new("UIScale", { Scale = 0.9 })
-	local root = new("CanvasGroup", { Bg = "Background", Active = true, GroupTransparency = 1, Size = Dim2(1, 0, 1, 0), Radius = Metrics.WindowRadius, Border = "Outline" }, holder)
+	local root = new("Frame", { Bg = "Background", Active = true, Size = Dim2(1, 0, 1, 0), Radius = Metrics.WindowRadius, Border = "Outline" }, holder)
 	addShadow(root, "Large")
 	win.Root = root
-	-- A Modal button frees the cursor from first-person camera lock while the menu is open.
+	win:_buildSeasonalDecorations()
+	
 	win.ModalButton = new("TextButton", { Modal = true, Size = Offset(1, 1) }, holder)
 
 	local sidebar = new("Frame", { Size = Dim2(0, Metrics.SidebarW, 1, 0) }, root)
 	win.Sidebar = sidebar
-	makeIcon(sidebar, IXA_LOGO_URL, 20, "Accent", "Background", { Position = Offset(Metrics.Pad * 2, 15) })
+	makeIxaMark(sidebar, 20, { Position = Offset(Metrics.Pad * 2, 15) })
 	label(sidebar, { Text = win.Title, TextSize = 16, Weight = Enum.FontWeight.Bold, X = 51, Y = 11, RowH = 28, W = 85 })
 	win.Indicator = new("Frame", { Bg = "Inline", Size = Offset(Metrics.TabW - 2, Metrics.TabH - 2), Radius = Metrics.PillRadius, Border = "Outline", Visible = false }, sidebar)
 	local searchButton = new("TextButton", {
@@ -3048,6 +3101,8 @@ function Blossom.new(options)
 
 	new("Frame", { Bg = "Outline", Position = Offset(Metrics.SidebarW, 0), Size = Dim2(0, 1, 1, 0) }, root)
 	local content = new("Frame", { Bg = "Tab", Position = Offset(Metrics.ContentX, 0), Size = Dim2(1, -Metrics.ContentX, 1, 0), Radius = Metrics.WindowRadius }, root)
+	win.Content = content
+	win:_updateSeasonalDecorations(win.ThemeName)
 	new("Frame", { Name = "CornerPatch", Bg = "Tab", Size = Dim2(0, 12, 1, 0) }, content)
 	win.Pages = new("Frame", {
 		Name = "Pages", Position = Offset(0, Metrics.Pad), Size = Dim2(1, 0, 1, -Metrics.Pad * 2), ClipsDescendants = true,
@@ -3064,7 +3119,6 @@ function Blossom.new(options)
 	win:_buildKeybindMenu()
 	win:_buildPicker()
 	win:_buildSearch()
-	win:_buildSeasonalDecorations()
 	if options.Resizable ~= false then win:_buildResize() end
 	win:_placeOverlays()
 	win.WatermarkLayout()
