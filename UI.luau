@@ -1,10 +1,14 @@
--- 1
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 
 local INTER = "rbxassetid://12187365364"
+
+-- Brand mark: upload ixa_logo.png (Roblox Studio > Asset Manager > Decals, or the website Create page),
+-- then replace the 0 below with your new Decal/Image asset id.
+local LOGO_IMAGE = "https://raw.githubusercontent.com/Be1for/ixa/refs/heads/main/logo.png"
+local LOGO_ASPECT = 1459 / 1078 -- width / height of ixa_logo.png, keep in sync if you resize the source art
 local Vec2, Dim2 = Vector2.new, UDim2.new
 local Offset = UDim2.fromOffset
 local RGB = Color3.fromRGB
@@ -391,7 +395,6 @@ end
 
 local Shadows = {
 	Large = { Blur = 10, Spread = 0, Transparency = 0.3 },    
-	Medium = { Blur = 8, Spread = 1, Transparency = 0.38 },
 	PickerKnob = { Blur = 6, Spread = 6, Transparency = 0.5 }, 
 }
 
@@ -401,7 +404,6 @@ local ShadowsAvailable = pcall(function() Instance.new("UIShadow"):Destroy() end
 local function addShadow(inst, style)
 	if not ShadowsAvailable then return nil end
 	local preset = Shadows[style]
-	if not preset then return nil end
 	local shadow = Instance.new("UIShadow")
 	shadow.BlurRadius = UDim.new(0, preset.Blur)
 	shadow.Spread = Offset(preset.Spread, preset.Spread)
@@ -697,16 +699,16 @@ end
 
 local function makeIxaMark(parent, size, props)
 	props = props or {}
-	local root = new("Frame", { Name = "IxaMark", Size = Offset(size, size), Position = props.Position, AnchorPoint = props.AnchorPoint, ZIndex = props.ZIndex }, parent)
-	local rows = { { 2, 9 }, { 5, 13 }, { 8, 13 }, { 11, 13 }, { 14, 10 } }
-	for index, row in rows do
-		new("Frame", {
-			Position = Offset(1, round(row[1] * size / 18)),
-			Size = Offset(round(row[2] * size / 18), math.max(1, round(1.8 * size / 18))),
-			Bg = function() return Current.Accent:Lerp(Current.Gradient, (index - 1) / (#rows - 1) * 0.35) end,
-			Radius = 1, ZIndex = props.ZIndex,
-		}, root)
-	end
+	local height = size
+	local width = round(size * LOGO_ASPECT)
+	local root = new("Frame", {
+		Name = "IxaMark", Size = Offset(width, height), Position = props.Position,
+		AnchorPoint = props.AnchorPoint, ZIndex = props.ZIndex, BackgroundTransparency = 1,
+	}, parent)
+	new("ImageLabel", {
+		Name = "Image", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1,
+		Image = LOGO_IMAGE, ScaleType = Enum.ScaleType.Fit, ZIndex = props.ZIndex,
+	}, root)
 	return root
 end
 
@@ -2016,36 +2018,40 @@ function Window:_buildSeasonalDecorations()
 	local halloweenFx = new("Frame", { Name = "HalloweenLayer", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 31, Visible = false }, fx)
 	self.WinterFader, self.HalloweenFader = newFader(winterFx), newFader(halloweenFx)
 	self.SeasonSnow, self.SeasonLights, self.SeasonGhosts, self.GarlandSegments = {}, {}, {}, {}
-	local lightColors = { RGB(255, 82, 91), RGB(255, 194, 78), RGB(92, 234, 159), RGB(104, 179, 255), RGB(255, 126, 204) }
+	-- Garland: smaller, dimmer, less eye-straining
+	local lightColors = { RGB(220, 60, 68), RGB(220, 165, 50), RGB(60, 190, 120), RGB(80, 150, 220), RGB(210, 100, 170) }
 	for i = 1, 12 do
 		local segment = new("Frame", {
 			Name = "GarlandWireSegment", AnchorPoint = Vec2(0.5, 0.5), Size = Dim2(1 / 12, 0, 0, 1),
-			BackgroundColor3 = RGB(57, 105, 71), BackgroundTransparency = 0.05, ZIndex = 32,
+			BackgroundColor3 = RGB(42, 78, 54), BackgroundTransparency = 0.35, ZIndex = 32,
 		}, winterFx)
 		segment:SetAttribute("SegmentIndex", i)
 		table.insert(self.GarlandSegments, segment)
 	end
 	for i = 1, 13 do
 		local x = 0.045 + (i - 1) * 0.076
-		local nodeY = 4 + math.sin((i - 1) / 12 * math.pi) * 12
+		local nodeY = 3 + math.sin((i - 1) / 12 * math.pi) * 7
 		local color = lightColors[(i - 1) % #lightColors + 1]
 		local outerGlow = new("Frame", {
-			Name = "BulbBloomOuter", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 4),
-			Size = Offset(22, 24), Radius = FULL, BackgroundColor3 = color, BackgroundTransparency = 0.91, ZIndex = 33,
+			-- Outer bloom: much smaller and very transparent
+			Name = "BulbBloomOuter", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 3),
+			Size = Offset(10, 11), Radius = FULL, BackgroundColor3 = color, BackgroundTransparency = 0.96, ZIndex = 33,
 		}, winterFx)
 		local glow = new("Frame", {
-			Name = "BulbBloom", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 5),
-			Size = Offset(13, 16), Radius = FULL, BackgroundColor3 = color, BackgroundTransparency = 0.62, ZIndex = 34,
+			-- Inner bloom: tight, subtle
+			Name = "BulbBloom", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 4),
+			Size = Offset(6, 7), Radius = FULL, BackgroundColor3 = color, BackgroundTransparency = 0.80, ZIndex = 34,
 		}, winterFx)
 		local socket = new("Frame", {
 			Name = "BulbSocket", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 1),
-			Size = Offset(3, 5), Radius = 2, BackgroundColor3 = RGB(59, 83, 63), ZIndex = 35,
+			Size = Offset(2, 3), Radius = 1, BackgroundColor3 = RGB(42, 60, 46), ZIndex = 35,
 		}, winterFx)
 		local bulb = new("Frame", {
-			Name = "GarlandBulb", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 5),
-			Size = Offset(5, 7), Radius = FULL, BackgroundColor3 = color, ZIndex = 36,
+			-- Bulb: 3×4 px instead of 5×7 — much smaller
+			Name = "GarlandBulb", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 4),
+			Size = Offset(3, 4), Radius = FULL, BackgroundColor3 = color, ZIndex = 36,
 		}, winterFx)
-		outlineShape(bulb, color:Lerp(Color3.new(1, 1, 1), 0.38), 0.8, 0.12)
+		outlineShape(bulb, color:Lerp(Color3.new(1, 1, 1), 0.3), 0.9, 0.18)
 		bulb:SetAttribute("LightIndex", i)
 		bulb:SetAttribute("BaseX", x)
 		bulb:SetAttribute("BulbColor", color)
@@ -2064,12 +2070,7 @@ function Window:_buildSeasonalDecorations()
 		snow:SetAttribute("SnowIndex", i)
 		table.insert(self.SeasonSnow, snow)
 	end
-	buildHalloweenWeb(halloweenFx)
-	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Ghost", 0.035, 0.14, 1))
-	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Pumpkin", 0.84, 0.13, 2))
-	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Skull", 0.06, 0.78, 3))
-	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Broom", 0.79, 0.75, 4))
-	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Pumpkin", 0.44, 0.83, 5))
+	-- Halloween decorations (skulls/pumpkins/ghosts/web removed per design decision)
 	self.SeasonClock = 0
 	self:_updateSeasonalDecorations(self.ThemeName)
 end
@@ -2099,7 +2100,7 @@ function Window:_stepSeasonalDecorations(dt)
 			snow.Rotation = math.sin(clock + index) * 18
 		end
 		local function garlandY(point)
-			return 4 + math.sin(point * math.pi) * 12 + math.sin(clock * 0.65 + point * 5) * 0.6
+			return 3 + math.sin(point * math.pi) * 7 + math.sin(clock * 0.65 + point * 5) * 0.4
 		end
 		local width = math.max(self.SeasonFX.AbsoluteSize.X, 1)
 		for _, segment in self.GarlandSegments do
@@ -2115,18 +2116,18 @@ function Window:_stepSeasonalDecorations(dt)
 		for _, light in self.SeasonLights do
 			local index = light.Bulb:GetAttribute("LightIndex")
 			local pulse = 0.52 + 0.48 * (0.5 + 0.5 * math.sin(clock * 2.8 + index * 0.91))
-			local sway = math.sin(clock * 1.35 + index * 0.7) * 1.6
+			local sway = math.sin(clock * 1.35 + index * 0.7) * 1.0
 			local y = garlandY((index - 1) / 12)
 			light.Socket.Position = UDim2.new(light.X, sway, 0, y + 1)
-			light.Bulb.Position = UDim2.new(light.X, sway, 0, y + 5)
-			light.Glow.Position = UDim2.new(light.X, sway, 0, y + 5)
-			light.OuterGlow.Position = UDim2.new(light.X, sway, 0, y + 4)
-			light.Bulb.BackgroundColor3 = light.Color:Lerp(Color3.new(1, 1, 1), 0.34 + pulse * 0.34)
-			light.Bulb.BackgroundTransparency = 0.02 + (1 - pulse) * 0.1
-			light.Glow.BackgroundTransparency = 0.76 - pulse * 0.45
-			light.OuterGlow.BackgroundTransparency = 0.95 - pulse * 0.12
-			light.Bulb.Size = Offset(5, 7)
-			light.Bulb.Rotation = math.sin(clock * 1.35 + index * 0.7) * 4
+			light.Bulb.Position = UDim2.new(light.X, sway, 0, y + 4)
+			light.Glow.Position = UDim2.new(light.X, sway, 0, y + 4)
+			light.OuterGlow.Position = UDim2.new(light.X, sway, 0, y + 3)
+			light.Bulb.BackgroundColor3 = light.Color:Lerp(Color3.new(1, 1, 1), 0.22 + pulse * 0.22)
+			light.Bulb.BackgroundTransparency = 0.1 + (1 - pulse) * 0.15
+			light.Glow.BackgroundTransparency = 0.86 - pulse * 0.3
+			light.OuterGlow.BackgroundTransparency = 0.97 - pulse * 0.06
+			light.Bulb.Size = Offset(3, 4)
+			light.Bulb.Rotation = math.sin(clock * 1.35 + index * 0.7) * 3
 		end
 	elseif self.ThemeName == "Halloween" then
 		for _, accent in self.SeasonGhosts do
@@ -2916,16 +2917,83 @@ end
 
 function Window:_buildWatermark(options)
 	local player = Players.LocalPlayer
-	local frame = new("Frame", { Name = "IxaWatermark", Bg = "Background", Size = Offset(294, 52), Radius = Metrics.FloatRadius, Border = "Outline", Active = true }, self.Screen)
+
+	-- Outer card: dark, slightly transparent, auto-width, border stroke like Library.lua
+	local frame = new("Frame", {
+		Name = "IxaWatermark",
+		AutomaticSize = Enum.AutomaticSize.X,
+		Size = Offset(0, 34),
+		BackgroundColor3 = RGB(12, 12, 15),
+		BackgroundTransparency = 0.08,
+		Radius = 8,
+		Active = true,
+	}, self.Screen)
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = RGB(255, 255, 255)
+	stroke.Transparency = 0.90
+	stroke.Thickness = 1
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Parent = frame
 	addShadow(frame, "Medium")
-	makeIxaMark(frame, 17, { Position = Offset(11, 7) })
-	label(frame, { Text = options.Title or "ixa script", TextSize = 13, Weight = Enum.FontWeight.SemiBold, X = 35, Y = 2, RowH = 25, W = 240 })
-	new("Frame", { Bg = "Outline", Position = Offset(11, 27), Size = Offset(272, 1) }, frame)
-	makeIcon(frame, "user", 11, "InactiveText", "Background", { Position = Offset(12, 35) })
-	local userText = label(frame, { Text = player and player.DisplayName or "Player", TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "InactiveText", X = 29, Y = 29, RowH = 20, W = 92, Truncate = Enum.TextTruncate.AtEnd })
-	new("Frame", { Bg = "Outline", Position = Offset(126, 34), Size = Offset(1, 14) }, frame)
-	makeIcon(frame, "file", 11, "Accent", "Background", { Position = Offset(137, 35) })
-	label(frame, { Text = options.Script or "ixa.lua", TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "InactiveText", X = 154, Y = 29, RowH = 20, W = 126, Truncate = Enum.TextTruncate.AtEnd })
+
+	-- Horizontal row with padding, auto-resize
+	local row = new("Frame", {
+		Name = "WmRow", Size = Dim2(0, 0, 1, 0), AutomaticSize = Enum.AutomaticSize.X,
+		BackgroundTransparency = 1,
+	}, frame)
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
+	layout.Padding = UDim.new(0, 6)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = row
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft = UDim.new(0, 10)
+	pad.PaddingRight = UDim.new(0, 10)
+	pad.Parent = row
+
+	-- Logo mark
+	makeIxaMark(row, 18, { ZIndex = 2 }).LayoutOrder = 1
+
+	-- Vertical divider
+	local div1 = new("Frame", { Size = Offset(1, 16), BackgroundColor3 = RGB(255,255,255), BackgroundTransparency = 0.80, ZIndex = 2 }, row)
+	div1.LayoutOrder = 2
+
+	-- Title (script name)
+	local titleLbl = Instance.new("TextLabel")
+	titleLbl.Text = options.Title or "ixa script"
+	titleLbl.TextSize = 12
+	titleLbl.Font = Enum.Font.BuilderSansSemibold
+	titleLbl.TextColor3 = RGB(230, 230, 236)
+	titleLbl.TextTransparency = 0
+	titleLbl.BackgroundTransparency = 1
+	titleLbl.AutomaticSize = Enum.AutomaticSize.X
+	titleLbl.Size = Offset(0, 18)
+	titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+	titleLbl.LayoutOrder = 3
+	titleLbl.ZIndex = 2
+	titleLbl.Parent = row
+
+	-- Vertical divider
+	local div2 = new("Frame", { Size = Offset(1, 16), BackgroundColor3 = RGB(255,255,255), BackgroundTransparency = 0.80, ZIndex = 2 }, row)
+	div2.LayoutOrder = 4
+
+	-- User icon + name
+	makeIcon(row, "user", 12, "InactiveText", nil, { ZIndex = 2 }).LayoutOrder = 5
+	local userText = Instance.new("TextLabel")
+	userText.Text = player and player.DisplayName or "Player"
+	userText.TextSize = 11
+	userText.Font = Enum.Font.BuilderSans
+	userText.TextColor3 = RGB(170, 170, 178)
+	userText.BackgroundTransparency = 1
+	userText.AutomaticSize = Enum.AutomaticSize.X
+	userText.Size = Offset(0, 18)
+	userText.TextXAlignment = Enum.TextXAlignment.Left
+	userText.TextTruncate = Enum.TextTruncate.AtEnd
+	userText.LayoutOrder = 6
+	userText.ZIndex = 2
+	userText.Parent = row
+
 	self.Watermark = frame
 	self.WatermarkFader = newFader(frame)
 	self.WatermarkParts = { User = userText }
@@ -2934,13 +3002,81 @@ function Window:_buildWatermark(options)
 end
 
 function Window:_buildHotkeys()
-	local holder = new("Frame", { Name = "IxaKeybindList", Bg = "Background", Size = Offset(220, 41), Radius = Metrics.FloatRadius, Border = "Outline", Active = true }, self.Screen)
+	-- Card style matches watermark: dark, auto-width, subtle border
+	local holder = new("Frame", {
+		Name = "IxaKeybindList",
+		AutomaticSize = Enum.AutomaticSize.XY,
+		Size = Offset(0, 0),
+		BackgroundColor3 = RGB(12, 12, 15),
+		BackgroundTransparency = 0.08,
+		Radius = 8,
+		Active = true,
+	}, self.Screen)
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = RGB(255, 255, 255)
+	stroke.Transparency = 0.90
+	stroke.Thickness = 1
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Parent = holder
 	addShadow(holder, "Medium")
-	local head = new("Frame", { Position = Offset(1, 1), Size = Dim2(1, -2, 0, 32), BackgroundTransparency = 1, Active = true }, holder)
-	makeIcon(head, "key", 13, "Accent", "Background", { Position = Offset(11, 9) })
-	label(head, { Text = "Keybinds", TextSize = 12, Weight = Enum.FontWeight.Medium, X = 33, Y = 2, RowH = 27, W = 160 })
-	new("Frame", { Bg = "Outline", Position = Offset(10, 33), Size = Offset(200, 1) }, holder)
+
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft = UDim.new(0, 10)
+	pad.PaddingRight = UDim.new(0, 10)
+	pad.PaddingTop = UDim.new(0, 8)
+	pad.PaddingBottom = UDim.new(0, 8)
+	pad.Parent = holder
+
+	local vLayout = Instance.new("UIListLayout")
+	vLayout.FillDirection = Enum.FillDirection.Vertical
+	vLayout.Padding = UDim.new(0, 0)
+	vLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	vLayout.Parent = holder
+
+	-- Header row
+	local head = new("Frame", {
+		Name = "KbHead", Size = Offset(0, 22), AutomaticSize = Enum.AutomaticSize.X,
+		BackgroundTransparency = 1, Active = true, LayoutOrder = 1,
+	}, holder)
+	local headLayout = Instance.new("UIListLayout")
+	headLayout.FillDirection = Enum.FillDirection.Horizontal
+	headLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	headLayout.Padding = UDim.new(0, 6)
+	headLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	headLayout.Parent = head
+
+	makeIcon(head, "key", 12, "Accent", nil, { ZIndex = 2 }).LayoutOrder = 1
+	local titleLbl = Instance.new("TextLabel")
+	titleLbl.Text = "Keybinds"
+	titleLbl.TextSize = 12
+	titleLbl.Font = Enum.Font.BuilderSansSemibold
+	titleLbl.TextColor3 = RGB(230, 230, 236)
+	titleLbl.BackgroundTransparency = 1
+	titleLbl.AutomaticSize = Enum.AutomaticSize.X
+	titleLbl.Size = Offset(0, 18)
+	titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+	titleLbl.LayoutOrder = 2
+	titleLbl.ZIndex = 2
+	titleLbl.Parent = head
+
+	-- Separator
+	local sep = new("Frame", {
+		Size = Offset(0, 1), AutomaticSize = Enum.AutomaticSize.X,
+		BackgroundColor3 = RGB(255, 255, 255), BackgroundTransparency = 0.86, LayoutOrder = 2,
+	}, holder)
+	-- Content frame (rows added dynamically by existing hotkey system)
+	local content = new("Frame", {
+		Name = "KbContent", Size = Offset(0, 0), AutomaticSize = Enum.AutomaticSize.XY,
+		BackgroundTransparency = 1, LayoutOrder = 3,
+	}, holder)
+	local contentLayout = Instance.new("UIListLayout")
+	contentLayout.FillDirection = Enum.FillDirection.Vertical
+	contentLayout.Padding = UDim.new(0, 2)
+	contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	contentLayout.Parent = content
+
 	self.Hotkeys = holder
+	self.HotkeysContent = content
 	self.HotkeysFader = newFader(holder)
 	self:_makeDraggable(head, holder)
 end
