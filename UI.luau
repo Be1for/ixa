@@ -5,10 +5,61 @@ local HttpService = game:GetService("HttpService")
 
 local INTER = "rbxassetid://12187365364"
 
--- Brand mark: upload ixa_logo.png (Roblox Studio > Asset Manager > Decals, or the website Create page),
--- then replace the 0 below with your new Decal/Image asset id.
+local LOGO_URL    = "https://raw.githubusercontent.com/Be1for/ixa/refs/heads/main/logo.png"
+local LOGO_PATH   = "ixa_logo.png"   
+local LOGO_ASPECT = 1459 / 1078      
+
 local LOGO_IMAGE = "https://raw.githubusercontent.com/Be1for/ixa/refs/heads/main/logo.png"
-local LOGO_ASPECT = 1459 / 1078 -- width / height of ixa_logo.png, keep in sync if you resize the source art
+
+local function _loadLogo()
+	-- Step 1: download only if the file is not already cached
+	local ok, err = pcall(function()
+		local needsDownload = true
+
+		-- isfile() is available on all major executors
+		if isfile and isfile(LOGO_PATH) then
+			needsDownload = false
+		end
+
+		if needsDownload then
+			local httpRequest = (syn and syn.request)
+				or (http and http.request)
+				or (request)
+				or (http_request)
+
+			if not httpRequest then
+				warn("[ixa] No HTTP request function available – logo will not load.")
+				return
+			end
+
+			local res = httpRequest({ Url = LOGO_URL, Method = "GET" })
+			if res and res.StatusCode == 200 and res.Body and #res.Body > 0 then
+				writefile(LOGO_PATH, res.Body)
+			else
+				warn("[ixa] Logo download failed (status " .. tostring(res and res.StatusCode) .. ").")
+				return
+			end
+		end
+
+		-- Step 2: convert the local file into a usable content URI
+		if getcustomasset then
+			LOGO_IMAGE = getcustomasset(LOGO_PATH)
+		elseif getsynasset then   -- Synapse X legacy alias
+			LOGO_IMAGE = getsynasset(LOGO_PATH)
+		else
+			warn("[ixa] getcustomasset not available – logo will not display.")
+		end
+	end)
+
+	if not ok then
+		warn("[ixa] Logo loader error: " .. tostring(err))
+	end
+end
+
+-- Run synchronously before the UI builds so every ImageLabel already has the URI
+_loadLogo()
+
+-- ─────────────────────────────────────────────────────────────────────────────
 local Vec2, Dim2 = Vector2.new, UDim2.new
 local Offset = UDim2.fromOffset
 local RGB = Color3.fromRGB
@@ -394,8 +445,9 @@ end
 
 
 local Shadows = {
-	Large = { Blur = 10, Spread = 0, Transparency = 0.3 },    
-	PickerKnob = { Blur = 6, Spread = 6, Transparency = 0.5 }, 
+	Large      = { Blur = 10, Spread = 0, Transparency = 0.3 },
+	Medium     = { Blur = 6,  Spread = 0, Transparency = 0.4 },
+	PickerKnob = { Blur = 6,  Spread = 6, Transparency = 0.5 },
 }
 
 
@@ -404,6 +456,7 @@ local ShadowsAvailable = pcall(function() Instance.new("UIShadow"):Destroy() end
 local function addShadow(inst, style)
 	if not ShadowsAvailable then return nil end
 	local preset = Shadows[style]
+	if not preset then return nil end
 	local shadow = Instance.new("UIShadow")
 	shadow.BlurRadius = UDim.new(0, preset.Blur)
 	shadow.Spread = Offset(preset.Spread, preset.Spread)
