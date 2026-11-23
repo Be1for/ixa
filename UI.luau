@@ -5,57 +5,9 @@ local HttpService = game:GetService("HttpService")
 
 local INTER = "rbxassetid://12187365364"
 
-local LOGO_URL    = "https://raw.githubusercontent.com/Be1for/ixa/refs/heads/main/logo.png"
-local LOGO_PATH   = "ixa_logo.png"   
-local LOGO_ASPECT = 1459 / 1078      
-
-local LOGO_IMAGE = "rbxassetid://122212432133342"
-
-local function _loadLogo()
-
-	local ok, err = pcall(function()
-		local needsDownload = true
-
-		if isfile and isfile(LOGO_PATH) then
-			needsDownload = false
-		end
-
-		if needsDownload then
-			local httpRequest = (syn and syn.request)
-				or (http and http.request)
-				or (request)
-				or (http_request)
-
-			if not httpRequest then
-				warn("[ixa] No HTTP request function available – logo will not load.")
-				return
-			end
-
-			local res = httpRequest({ Url = LOGO_URL, Method = "GET" })
-			if res and res.StatusCode == 200 and res.Body and #res.Body > 0 then
-				writefile(LOGO_PATH, res.Body)
-			else
-				warn("[ixa] Logo download failed (status " .. tostring(res and res.StatusCode) .. ").")
-				return
-			end
-		end
-
-		if getcustomasset then
-			LOGO_IMAGE = getcustomasset(LOGO_PATH)
-		elseif getsynasset then   -- Synapse X legacy alias
-			LOGO_IMAGE = getsynasset(LOGO_PATH)
-		else
-			warn("[ixa] getcustomasset not available – logo will not display.")
-		end
-	end)
-
-	if not ok then
-		warn("[ixa] Logo loader error: " .. tostring(err))
-	end
-end
-
--- Run synchronously before the UI builds so every ImageLabel already has the URI
-_loadLogo()
+local COMET_ID = "rbxassetid://122212432133342"
+local LOGO_IMAGE = COMET_ID
+local LOGO_ASPECT = 1459 / 1078
 
 local Vec2, Dim2 = Vector2.new, UDim2.new
 local Offset = UDim2.fromOffset
@@ -2068,7 +2020,7 @@ function Window:_buildSeasonalDecorations()
 	local halloweenFx = new("Frame", { Name = "HalloweenLayer", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 31, Visible = false }, fx)
 	self.WinterFader, self.HalloweenFader = newFader(winterFx), newFader(halloweenFx)
 	self.SeasonSnow, self.SeasonLights, self.SeasonGhosts, self.GarlandSegments = {}, {}, {}, {}
-	-- Garland: smaller, dimmer, less eye-straining
+	
 	local lightColors = { RGB(220, 60, 68), RGB(220, 165, 50), RGB(60, 190, 120), RGB(80, 150, 220), RGB(210, 100, 170) }
 	for i = 1, 12 do
 		local segment = new("Frame", {
@@ -2083,12 +2035,12 @@ function Window:_buildSeasonalDecorations()
 		local nodeY = 3 + math.sin((i - 1) / 12 * math.pi) * 7
 		local color = lightColors[(i - 1) % #lightColors + 1]
 		local outerGlow = new("Frame", {
-			-- Outer bloom: much smaller and very transparent
+			
 			Name = "BulbBloomOuter", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 3),
 			Size = Offset(10, 11), Radius = FULL, BackgroundColor3 = color, BackgroundTransparency = 0.96, ZIndex = 33,
 		}, winterFx)
 		local glow = new("Frame", {
-			-- Inner bloom: tight, subtle
+			
 			Name = "BulbBloom", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 4),
 			Size = Offset(6, 7), Radius = FULL, BackgroundColor3 = color, BackgroundTransparency = 0.80, ZIndex = 34,
 		}, winterFx)
@@ -2097,7 +2049,7 @@ function Window:_buildSeasonalDecorations()
 			Size = Offset(2, 3), Radius = 1, BackgroundColor3 = RGB(42, 60, 46), ZIndex = 35,
 		}, winterFx)
 		local bulb = new("Frame", {
-			-- Bulb: 3×4 px instead of 5×7 — much smaller
+			
 			Name = "GarlandBulb", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 4),
 			Size = Offset(3, 4), Radius = FULL, BackgroundColor3 = color, ZIndex = 36,
 		}, winterFx)
@@ -2120,7 +2072,7 @@ function Window:_buildSeasonalDecorations()
 		snow:SetAttribute("SnowIndex", i)
 		table.insert(self.SeasonSnow, snow)
 	end
-	-- Halloween decorations (skulls/pumpkins/ghosts/web removed per design decision)
+	
 	self.SeasonClock = 0
 	self:_updateSeasonalDecorations(self.ThemeName)
 end
@@ -2968,7 +2920,7 @@ end
 function Window:_buildWatermark(options)
 	local player = Players.LocalPlayer
 
-	-- Outer card: dark, slightly transparent, auto-width, border stroke like Library.lua
+	
 	local frame = new("Frame", {
 		Name = "IxaWatermark",
 		AutomaticSize = Enum.AutomaticSize.X,
@@ -2986,7 +2938,7 @@ function Window:_buildWatermark(options)
 	stroke.Parent = frame
 	addShadow(frame, "Medium")
 
-	-- Horizontal row with padding, auto-resize
+	
 	local row = new("Frame", {
 		Name = "WmRow", Size = Dim2(0, 0, 1, 0), AutomaticSize = Enum.AutomaticSize.X,
 		BackgroundTransparency = 1,
@@ -3002,14 +2954,14 @@ function Window:_buildWatermark(options)
 	pad.PaddingRight = UDim.new(0, 10)
 	pad.Parent = row
 
-	-- Logo mark
+	
 	makeIxaMark(row, 18, { ZIndex = 2 }).LayoutOrder = 1
 
-	-- Vertical divider
+	
 	local div1 = new("Frame", { Size = Offset(1, 16), BackgroundColor3 = RGB(255,255,255), BackgroundTransparency = 0.80, ZIndex = 2 }, row)
 	div1.LayoutOrder = 2
 
-	-- Title (script name)
+	
 	local titleLbl = Instance.new("TextLabel")
 	titleLbl.Text = options.Title or "ixa script"
 	titleLbl.TextSize = 12
@@ -3024,11 +2976,11 @@ function Window:_buildWatermark(options)
 	titleLbl.ZIndex = 2
 	titleLbl.Parent = row
 
-	-- Vertical divider
+	
 	local div2 = new("Frame", { Size = Offset(1, 16), BackgroundColor3 = RGB(255,255,255), BackgroundTransparency = 0.80, ZIndex = 2 }, row)
 	div2.LayoutOrder = 4
 
-	-- User icon + name
+	
 	makeIcon(row, "user", 12, "InactiveText", nil, { ZIndex = 2 }).LayoutOrder = 5
 	local userText = Instance.new("TextLabel")
 	userText.Text = player and player.DisplayName or "Player"
@@ -3052,7 +3004,7 @@ function Window:_buildWatermark(options)
 end
 
 function Window:_buildHotkeys()
-	-- Card style matches watermark: dark, auto-width, subtle border
+	
 	local holder = new("Frame", {
 		Name = "IxaKeybindList",
 		AutomaticSize = Enum.AutomaticSize.XY,
@@ -3083,7 +3035,7 @@ function Window:_buildHotkeys()
 	vLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	vLayout.Parent = holder
 
-	-- Header row
+	
 	local head = new("Frame", {
 		Name = "KbHead", Size = Offset(0, 22), AutomaticSize = Enum.AutomaticSize.X,
 		BackgroundTransparency = 1, Active = true, LayoutOrder = 1,
@@ -3109,12 +3061,12 @@ function Window:_buildHotkeys()
 	titleLbl.ZIndex = 2
 	titleLbl.Parent = head
 
-	-- Separator
+	
 	local sep = new("Frame", {
 		Size = Offset(0, 1), AutomaticSize = Enum.AutomaticSize.X,
 		BackgroundColor3 = RGB(255, 255, 255), BackgroundTransparency = 0.86, LayoutOrder = 2,
 	}, holder)
-	-- Content frame (rows added dynamically by existing hotkey system)
+	
 	local content = new("Frame", {
 		Name = "KbContent", Size = Offset(0, 0), AutomaticSize = Enum.AutomaticSize.XY,
 		BackgroundTransparency = 1, LayoutOrder = 3,
