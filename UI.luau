@@ -1,4 +1,3 @@
--- 1
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -1849,7 +1848,7 @@ function Window:SetHotkeyActive(object, active)
 		setText(key, keyName(object.Key))
 		frame.Position = Offset(-8, 35 + (#self.HotkeyOrder - 1) * 23)
 		entry.Fader:Show(nil, "Smooth")
-		if self.Visible and self.OverlayEnabled[self.Hotkeys] ~= false then self:SetOverlayVisible(self.Hotkeys, true) end
+	if self.OverlayEnabled[self.Hotkeys] ~= false then self:SetOverlayVisible(self.Hotkeys, true) end
 	elseif entry and shouldShow then
 		setText(entry.Label, object.Name or "Key")
 		setText(entry.KeyLabel, keyName(object.Key))
@@ -2695,9 +2694,6 @@ end
 function Window:SetVisible(visible)
 	if self.Visible == visible then return end
 	self.Visible = visible
-	for _, frame in { self.Watermark, self.Hotkeys } do
-		if frame then self:SetOverlayVisible(frame, visible and self.OverlayEnabled[frame] ~= false) end
-	end
 	self.VisibilityGeneration += 1
 	local generation = self.VisibilityGeneration
 	self.VisibilityTransition = true
@@ -2906,8 +2902,8 @@ function Window:BuildSettings(tab)
 	local menu = tab:Section({ Name = "Menu", Icon = "cube", Side = 2 })
 	local menuBind = menu:Keybind({ Name = "Menu Key", Default = self.MenuKey, NoSave = true })
 	menuBind.OnKeyChanged = function() self.MenuKey = menuBind.Key end
-	menu:Toggle({ Name = "Watermark", Default = true, NoSave = true, Callback = function(value) self.OverlayEnabled[self.Watermark] = value; self:SetOverlayVisible(self.Watermark, value and self.Visible) end })
-	menu:Toggle({ Name = "Hotkey List", Default = true, NoSave = true, Callback = function(value) self.OverlayEnabled[self.Hotkeys] = value; self:SetOverlayVisible(self.Hotkeys, value and self.Visible) end })
+		menu:Toggle({ Name = "Watermark", Default = true, NoSave = true, Callback = function(value) self.OverlayEnabled[self.Watermark] = value; self:SetOverlayVisible(self.Watermark, value) end })
+		menu:Toggle({ Name = "Hotkey List", Default = true, NoSave = true, Callback = function(value) self.OverlayEnabled[self.Hotkeys] = value; self:SetOverlayVisible(self.Hotkeys, value) end })
 	menu:Dropdown({ Name = "Font", Options = FontOrder, Default = "Inter", NoSave = true, Callback = function(value) self:SetFont(value) end })
 	menu:Dropdown({ Name = "Text Weight", Options = WeightOrder, Default = BodyWeight.Name, NoSave = true, Callback = function(value) self:SetTextWeight(value) end })
 
@@ -2996,6 +2992,37 @@ function Window:_buildWatermark(options)
 	userText.LayoutOrder = 6
 	userText.ZIndex = 2
 	userText.Parent = row
+	local dateText = Instance.new("TextLabel")
+	dateText.Text = os.date("%d.%m.%Y %H:%M:%S")
+	dateText.TextSize = 11
+	dateText.Font = Enum.Font.BuilderSans
+	dateText.TextColor3 = RGB(170, 170, 178)
+	dateText.BackgroundTransparency = 1
+	dateText.AutomaticSize = Enum.AutomaticSize.X
+	dateText.Size = Offset(0, 18)
+	dateText.TextXAlignment = Enum.TextXAlignment.Left
+	dateText.LayoutOrder = 7
+	dateText.ZIndex = 2
+	dateText.Parent = row
+	local dateDivider = new("Frame", { Size = Offset(1, 16), BackgroundColor3 = RGB(255,255,255), BackgroundTransparency = 0.80, ZIndex = 2 }, row)
+	dateDivider.LayoutOrder = 8
+	makeIcon(row, "clock", 12, "InactiveText", nil, { ZIndex = 2 }).LayoutOrder = 9
+	local timeText = Instance.new("TextLabel")
+	timeText.Text = os.date("%H:%M:%S")
+	timeText.TextSize = 11
+	timeText.Font = Enum.Font.BuilderSans
+	timeText.TextColor3 = RGB(170, 170, 178)
+	timeText.BackgroundTransparency = 1
+	timeText.AutomaticSize = Enum.AutomaticSize.X
+	timeText.Size = Offset(0, 18)
+	timeText.TextXAlignment = Enum.TextXAlignment.Left
+	timeText.LayoutOrder = 10
+	timeText.ZIndex = 2
+	timeText.Parent = row
+	self.WatermarkClockUpdate = function()
+		dateText.Text = os.date("%d.%m.%Y")
+		timeText.Text = os.date("%H:%M:%S")
+	end
 
 	self.Watermark = frame
 	self.WatermarkFader = newFader(frame)
@@ -3277,6 +3304,7 @@ function Blossom.new(options)
 	local function perFrame(dt)
 		clock += dt
 		colorClock += dt
+		if win.WatermarkClockUpdate and clock >= 1 then win.WatermarkClockUpdate() end
 		win:_stepSeasonalDecorations(dt)
 		win:_flushThemeColors(dt)
 		if win.OpenDropdown then win.OpenDropdown.Follow() end
