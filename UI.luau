@@ -12,11 +12,10 @@ local LOGO_ASPECT = 1459 / 1078
 local LOGO_IMAGE = "https://raw.githubusercontent.com/Be1for/ixa/refs/heads/main/logo.png"
 
 local function _loadLogo()
-	-- Step 1: download only if the file is not already cached
+
 	local ok, err = pcall(function()
 		local needsDownload = true
 
-		-- isfile() is available on all major executors
 		if isfile and isfile(LOGO_PATH) then
 			needsDownload = false
 		end
@@ -41,7 +40,6 @@ local function _loadLogo()
 			end
 		end
 
-		-- Step 2: convert the local file into a usable content URI
 		if getcustomasset then
 			LOGO_IMAGE = getcustomasset(LOGO_PATH)
 		elseif getsynasset then   -- Synapse X legacy alias
@@ -59,7 +57,6 @@ end
 -- Run synchronously before the UI builds so every ImageLabel already has the URI
 _loadLogo()
 
--- ─────────────────────────────────────────────────────────────────────────────
 local Vec2, Dim2 = Vector2.new, UDim2.new
 local Offset = UDim2.fromOffset
 local RGB = Color3.fromRGB
