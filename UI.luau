@@ -23,26 +23,6 @@ local Metrics = {
 }
 
 local Themes = {
-	Blossom = {
-		Background = RGB(42, 44, 52), Tab = RGB(48, 50, 58), Outline = RGB(65, 68, 80), Inline = RGB(56, 58, 68),
-		Text = RGB(232, 234, 245), InactiveText = RGB(126, 130, 148), Accent = RGB(113, 159, 226), Element = RGB(54, 57, 68),
-		Gradient = RGB(172, 187, 209), Shadow = RGB(0, 0, 0), HoveredElement = RGB(72, 77, 90),
-	},
-	Afterglow = {
-		Background = RGB(34, 28, 25), Tab = RGB(30, 23, 20), Outline = RGB(60, 46, 38), Inline = RGB(42, 33, 29),
-		Text = RGB(240, 232, 226), InactiveText = RGB(140, 122, 110), Accent = RGB(255, 145, 60), Element = RGB(49, 34, 27),
-		Gradient = RGB(172, 167, 163), Shadow = RGB(0, 0, 0), HoveredElement = RGB(70, 51, 42),
-	},
-	Frostbite = {
-		Background = RGB(22, 30, 38), Tab = RGB(16, 25, 32), Outline = RGB(42, 58, 72), Inline = RGB(27, 38, 47),
-		Text = RGB(228, 240, 248), InactiveText = RGB(114, 136, 152), Accent = RGB(86, 219, 255), Element = RGB(28, 39, 52),
-		Gradient = RGB(164, 172, 178), Shadow = RGB(0, 0, 0), HoveredElement = RGB(44, 60, 74),
-	},
-	Volt = {
-		Background = RGB(24, 24, 20), Tab = RGB(18, 18, 14), Outline = RGB(54, 54, 40), Inline = RGB(32, 32, 26),
-		Text = RGB(242, 242, 226), InactiveText = RGB(134, 134, 112), Accent = RGB(255, 250, 76), Element = RGB(32, 32, 26),
-		Gradient = RGB(170, 170, 158), Shadow = RGB(0, 0, 0), HoveredElement = RGB(58, 58, 44),
-	},
 	Obsidian = {
 		Background = RGB(20, 16, 28), Tab = RGB(27, 21, 38), Outline = RGB(62, 48, 82), Inline = RGB(31, 24, 45),
 		Text = RGB(247, 241, 255), InactiveText = RGB(163, 149, 186), Accent = RGB(184, 139, 255), Element = RGB(34, 26, 49),
@@ -57,36 +37,6 @@ local Themes = {
 		Background = RGB(25, 17, 31), Tab = RGB(32, 20, 35), Outline = RGB(77, 47, 72), Inline = RGB(39, 26, 43),
 		Text = RGB(250, 235, 220), InactiveText = RGB(161, 130, 154), Accent = RGB(255, 137, 53), Element = RGB(45, 29, 48),
 		Gradient = RGB(196, 151, 173), Shadow = RGB(0, 0, 0), HoveredElement = RGB(70, 44, 65),
-	},
-	["Sakura Drift"] = {
-		Background = RGB(38, 28, 34), Tab = RGB(32, 23, 29), Outline = RGB(70, 50, 62), Inline = RGB(48, 35, 43),
-		Text = RGB(248, 234, 242), InactiveText = RGB(150, 122, 138), Accent = RGB(255, 155, 205), Element = RGB(44, 46, 48),
-		Gradient = RGB(176, 166, 172), Shadow = RGB(0, 0, 0), HoveredElement = RGB(77, 53, 67),
-	},
-	["Neon Mirage"] = {
-		Background = RGB(22, 16, 34), Tab = RGB(17, 12, 28), Outline = RGB(54, 40, 82), Inline = RGB(32, 23, 48),
-		Text = RGB(238, 232, 252), InactiveText = RGB(128, 114, 160), Accent = RGB(255, 86, 255), Element = RGB(30, 21, 46),
-		Gradient = RGB(144, 163, 182), Shadow = RGB(0, 0, 0), HoveredElement = RGB(56, 39, 84),
-	},
-	["Copper Dust"] = {
-		Background = RGB(39, 30, 25), Tab = RGB(34, 25, 20), Outline = RGB(72, 54, 42), Inline = RGB(49, 36, 28),
-		Text = RGB(244, 232, 220), InactiveText = RGB(148, 124, 104), Accent = RGB(243, 152, 86), Element = RGB(51, 34, 22),
-		Gradient = RGB(173, 164, 155), Shadow = RGB(0, 0, 0), HoveredElement = RGB(77, 56, 42),
-	},
-	Abyss = {
-		Background = RGB(12, 20, 28), Tab = RGB(8, 15, 22), Outline = RGB(30, 48, 62), Inline = RGB(18, 30, 40),
-		Text = RGB(222, 236, 246), InactiveText = RGB(100, 128, 148), Accent = RGB(52, 176, 238), Element = RGB(16, 28, 38),
-		Gradient = RGB(158, 169, 176), Shadow = RGB(0, 0, 0), HoveredElement = RGB(32, 51, 67),
-	},
-	Porcelain = {
-		Background = RGB(250, 248, 244), Tab = RGB(236, 234, 230), Outline = RGB(214, 212, 208), Inline = RGB(255, 255, 255),
-		Text = RGB(44, 46, 54), InactiveText = RGB(140, 142, 150), Accent = RGB(133, 176, 255), Element = RGB(255, 255, 255),
-		Gradient = RGB(214, 218, 226), Shadow = RGB(120, 120, 120), HoveredElement = RGB(255, 255, 255),
-	},
-	Graphite = {
-		Background = RGB(32, 30, 30), Tab = RGB(40, 40, 40), Outline = RGB(58, 60, 62), Inline = RGB(42, 45, 46),
-		Text = RGB(236, 236, 250), InactiveText = RGB(128, 128, 134), Accent = RGB(105, 159, 237), Element = RGB(44, 46, 46),
-		Gradient = RGB(190, 190, 190), Shadow = RGB(0, 0, 0), HoveredElement = RGB(67, 70, 72),
 	},
 }
 local ThemeOrder = { "Obsidian", "Winter", "Halloween" }
@@ -1851,9 +1801,9 @@ function Window:SetOverlayVisible(frame, visible)
 end
 
 function Window:_layoutHotkeys(animated)
-	local rowHeight, rowGap, top = 30, 5, 40
-	local height = 44 + #self.HotkeyOrder * (rowHeight + rowGap)
-	local size = Offset(236, height)
+	local rowHeight, rowGap, top = 21, 2, 35
+	local height = 34 + #self.HotkeyOrder * (rowHeight + rowGap) + 7
+	local size = Offset(220, height)
 	if animated then
 		self.HotkeyLayoutAnimating = true
 		animate(self.Hotkeys, "Size", size, "Smooth", {
@@ -1869,7 +1819,6 @@ function Window:_layoutHotkeys(animated)
 		local entry = self.HotkeyEntries[object]
 		if entry then place(entry.Frame, "Position", Offset(10, top + (index - 1) * (rowHeight + rowGap)), animated, "Settle") end
 	end
-	setText(self.HotkeyCount, string.format("%02d", #self.HotkeyOrder))
 	if not self.Moved[self.Hotkeys] and not self.OverlayAnimating[self.Hotkeys] and not self.HotkeyLayoutAnimating then self:_placeOverlays() end
 end
 
@@ -1878,22 +1827,21 @@ function Window:SetHotkeyActive(object, active)
 	local shouldShow = active and object.Key ~= nil
 	if shouldShow and not entry then
 		local frame = new("Frame", {
-			Name = "HotkeyRow", Bg = "Inline", Position = Offset(-8, 40), Size = Offset(216, 30),
-			Radius = Metrics.PillRadius, Border = "Outline", Visible = false,
+			Name = "HotkeyRow", Position = Offset(-8, 35), Size = Offset(200, 21),
+			BackgroundTransparency = 1, Visible = false,
 		}, self.Hotkeys)
-		new("Frame", { Bg = "Accent", Position = Offset(7, 9), Size = Offset(2, 12), Radius = FULL }, frame)
-		local name = label(frame, { TextSize = 11, X = 17, RowH = 30, W = 104, Weight = Enum.FontWeight.Medium, Truncate = Enum.TextTruncate.AtEnd })
-		local keyFrame = new("Frame", { Bg = "Element", Position = Offset(128, 4), Size = Offset(79, 22), Radius = Metrics.PillRadius, Border = "Outline" }, frame)
-		local key = label(keyFrame, { TextSize = 10, Weight = Enum.FontWeight.SemiBold, RowH = 22, W = 79 })
-		key.TextXAlignment = Enum.TextXAlignment.Center
+		local name = label(frame, { TextSize = 11, X = 12, RowH = 21, W = 128, Weight = Enum.FontWeight.Medium, Truncate = Enum.TextTruncate.AtEnd })
+		local key = label(frame, { TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "Accent", RowH = 21, W = 58 })
+		key.TextXAlignment = Enum.TextXAlignment.Right
+		key.Position = Offset(140, 0)
 		entry = { Frame = frame, Label = name, KeyLabel = key, Fader = newFader(frame) }
 		self.HotkeyEntries[object] = entry
 		table.insert(self.HotkeyOrder, object)
 		setText(name, object.Name or "Key")
 		setText(key, keyName(object.Key))
-		frame.Position = Offset(-8, 40 + (#self.HotkeyOrder - 1) * 35)
+		frame.Position = Offset(-8, 35 + (#self.HotkeyOrder - 1) * 23)
 		entry.Fader:Show(nil, "Smooth")
-		if self.OverlayTarget[self.Hotkeys] ~= false then self:SetOverlayVisible(self.Hotkeys, true) end
+		if self.Visible and self.OverlayEnabled[self.Hotkeys] ~= false then self:SetOverlayVisible(self.Hotkeys, true) end
 	elseif entry and shouldShow then
 		setText(entry.Label, object.Name or "Key")
 		setText(entry.KeyLabel, keyName(object.Key))
@@ -1987,53 +1935,53 @@ local function buildHalloweenIcon(parent, kind, x, y, index)
 	local iconSize = kind == "Broom" and 66 or 54
 	local root = new("Frame", {
 		Name = kind .. "Silhouette", Position = UDim2.fromScale(x, y), Size = Offset(iconSize, iconSize),
-		BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 1,
+		BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 34,
 	}, parent)
 	root:SetAttribute("FloatIndex", index)
 	root:SetAttribute("BaseX", x)
 	root:SetAttribute("BaseY", y)
 	if kind == "Pumpkin" then
-		local shade, edge = RGB(87, 47, 42), RGB(151, 93, 75)
-		local left = seasonalShape(root, "PumpkinRib", 4, 22, 21, 24, shade, FULL, 0, 1, 0.52)
-		local right = seasonalShape(root, "PumpkinRib", 28, 22, 21, 24, shade, FULL, 0, 1, 0.52)
+		local shade, edge = RGB(255, 137, 48), RGB(255, 194, 105)
+		local left = seasonalShape(root, "PumpkinRib", 4, 22, 21, 24, shade, FULL, 0, 35, 0.08)
+		local right = seasonalShape(root, "PumpkinRib", 28, 22, 21, 24, shade, FULL, 0, 35, 0.08)
 		outlineShape(left, edge, 1, 0.58)
 		outlineShape(right, edge, 1, 0.58)
-		local body = seasonalShape(root, "PumpkinBody", 13, 18, 32, 30, shade, FULL, 0, 1, 0.45)
+		local body = seasonalShape(root, "PumpkinBody", 13, 18, 32, 30, shade, FULL, 0, 35, 0.03)
 		outlineShape(body, edge, 1, 0.5)
-		seasonalShape(root, "PumpkinStem", 26, 8, 8, 15, RGB(61, 73, 53), 3, 9, 1, 0.44)
-		seasonalShape(root, "PumpkinEye", 21, 29, 5, 8, RGB(28, 20, 31), 2, 18, 1, 0.12)
-		seasonalShape(root, "PumpkinEye", 34, 29, 5, 8, RGB(28, 20, 31), 2, -18, 1, 0.12)
-		seasonalShape(root, "PumpkinMouth", 25, 41, 11, 3, RGB(28, 20, 31), 2, 0, 1, 0.18)
+		seasonalShape(root, "PumpkinStem", 26, 8, 8, 15, RGB(91, 158, 88), 3, 9, 37, 0)
+		seasonalShape(root, "PumpkinEye", 21, 29, 5, 8, RGB(60, 29, 34), 2, 18, 37, 0)
+		seasonalShape(root, "PumpkinEye", 34, 29, 5, 8, RGB(60, 29, 34), 2, -18, 37, 0)
+		seasonalShape(root, "PumpkinMouth", 25, 41, 11, 3, RGB(60, 29, 34), 2, 0, 37, 0)
 	elseif kind == "Ghost" then
-		local shade, edge = RGB(127, 118, 145), RGB(183, 167, 198)
-		local tail = seasonalShape(root, "GhostShroud", 12, 26, 33, 25, shade, 13, 0, 1, 0.65)
-		local head = seasonalShape(root, "GhostHead", 16, 8, 26, 30, shade, FULL, 0, 1, 0.61)
+		local shade, edge = RGB(242, 241, 255), RGB(190, 177, 230)
+		local tail = seasonalShape(root, "GhostShroud", 12, 26, 33, 25, shade, 13, 0, 35, 0.03)
+		local head = seasonalShape(root, "GhostHead", 16, 8, 26, 30, shade, FULL, 0, 36, 0.02)
 		outlineShape(head, edge, 1, 0.66)
 		outlineShape(tail, edge, 1, 0.72)
-		seasonalShape(root, "GhostEye", 23, 26, 4, 8, RGB(35, 27, 42), FULL, -5, 1, 0.2)
-		seasonalShape(root, "GhostEye", 34, 26, 4, 8, RGB(35, 27, 42), FULL, 5, 1, 0.2)
+		seasonalShape(root, "GhostEye", 23, 26, 4, 8, RGB(43, 34, 58), FULL, -5, 37, 0)
+		seasonalShape(root, "GhostEye", 34, 26, 4, 8, RGB(43, 34, 58), FULL, 5, 37, 0)
 	elseif kind == "Skull" then
-		local bone, edge, ink = RGB(135, 127, 145), RGB(190, 175, 201), RGB(37, 28, 45)
-		local cranium = seasonalShape(root, "SkullCranium", 11, 5, 34, 31, bone, 15, 0, 1, 0.58)
-		local jaw = seasonalShape(root, "SkullJaw", 16, 28, 24, 17, bone, 5, 0, 1, 0.55)
+		local bone, edge, ink = RGB(233, 225, 244), RGB(255, 243, 224), RGB(51, 35, 57)
+		local cranium = seasonalShape(root, "SkullCranium", 11, 5, 34, 31, bone, 15, 0, 35, 0.03)
+		local jaw = seasonalShape(root, "SkullJaw", 16, 28, 24, 17, bone, 5, 0, 35, 0.02)
 		outlineShape(cranium, edge, 1, 0.62)
 		outlineShape(jaw, edge, 1, 0.68)
-		seasonalShape(root, "SkullSocket", 17, 20, 9, 10, ink, FULL, 0, 1, 0.12)
-		seasonalShape(root, "SkullSocket", 31, 20, 9, 10, ink, FULL, 0, 1, 0.12)
-		seasonalShape(root, "SkullNose", 26, 31, 4, 5, ink, 1, 45, 1, 0.15)
-		for i = 1, 4 do seasonalShape(root, "SkullTooth", 19 + (i - 1) * 5, 38, 2, 6, edge, 1, 0, 1, 0.28) end
+		seasonalShape(root, "SkullSocket", 17, 20, 9, 10, ink, FULL, 0, 37, 0)
+		seasonalShape(root, "SkullSocket", 31, 20, 9, 10, ink, FULL, 0, 37, 0)
+		seasonalShape(root, "SkullNose", 26, 31, 4, 5, ink, 1, 45, 37, 0)
+		for i = 1, 4 do seasonalShape(root, "SkullTooth", 19 + (i - 1) * 5, 38, 2, 6, edge, 1, 0, 37, 0) end
 	elseif kind == "Broom" then
-		local wood, straw = RGB(105, 79, 67), RGB(93, 77, 64)
-		seasonalShape(root, "BroomHandle", 31, 5, 3, 53, wood, 2, 28, 1, 0.48)
+		local wood, straw = RGB(116, 75, 63), RGB(218, 177, 116)
+		seasonalShape(root, "BroomHandle", 31, 5, 3, 53, wood, 2, 28, 35, 0.04)
 		for i = 1, 7 do
-			seasonalShape(root, "BroomStraw", 12 + i * 4, 35 + math.abs(4 - i) * 2, 3, 22 - math.abs(4 - i) * 2, straw, 2, 20 + (i - 4) * 5, 1, 0.45)
+			seasonalShape(root, "BroomStraw", 12 + i * 4, 35 + math.abs(4 - i) * 2, 3, 22 - math.abs(4 - i) * 2, straw, 2, 20 + (i - 4) * 5, 35, 0.03)
 		end
 	end
 	return root
 end
 
 local function buildHalloweenWeb(parent)
-	local web = new("Frame", { Name = "Spiderweb", AnchorPoint = Vec2(1, 0), Position = Dim2(1, -2, 0, 2), Size = Offset(88, 88), BackgroundTransparency = 1, ZIndex = 1 }, parent)
+	local web = new("Frame", { Name = "Spiderweb", AnchorPoint = Vec2(1, 0), Position = Dim2(1, -2, 0, 2), Size = Offset(88, 88), BackgroundTransparency = 1, ZIndex = 34 }, parent)
 	local color, origin = RGB(166, 153, 184), Vec2(88, 0)
 	local rays = { Vec2(8, 0), Vec2(34, 3), Vec2(66, 16), Vec2(87, 42), Vec2(86, 77) }
 	local function line(x1, y1, x2, y2, alpha, width)
@@ -2041,7 +1989,7 @@ local function buildHalloweenWeb(parent)
 		local segment = new("Frame", {
 			Name = "WebThread", AnchorPoint = Vec2(0.5, 0.5), Position = Offset((x1 + x2) / 2, (y1 + y2) / 2),
 			Size = Offset(math.sqrt(dx * dx + dy * dy), width or 1), Rotation = math.deg(math.atan2(dy, dx)),
-			BackgroundColor3 = color, BackgroundTransparency = alpha, ZIndex = 1,
+			BackgroundColor3 = color, BackgroundTransparency = alpha, ZIndex = 35,
 		}, web)
 		return segment
 	end
@@ -2058,11 +2006,11 @@ end
 function Window:_buildSeasonalDecorations()
 	local fx = new("Frame", {
 		Name = "SeasonalFX", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1,
-		ClipsDescendants = true, Active = false, Selectable = false, ZIndex = 1,
+		ClipsDescendants = true, Active = false, Selectable = false, ZIndex = 30,
 	}, self.Root)
 	self.SeasonFX = fx
 	local winterFx = new("Frame", { Name = "WinterLayer", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 30, Visible = false }, fx)
-	local halloweenFx = new("Frame", { Name = "HalloweenLayer", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 1, Visible = false }, fx)
+	local halloweenFx = new("Frame", { Name = "HalloweenLayer", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 31, Visible = false }, fx)
 	self.WinterFader, self.HalloweenFader = newFader(winterFx), newFader(halloweenFx)
 	self.SeasonSnow, self.SeasonLights, self.SeasonGhosts, self.GarlandSegments = {}, {}, {}, {}
 	local lightColors = { RGB(255, 82, 91), RGB(255, 194, 78), RGB(92, 234, 159), RGB(104, 179, 255), RGB(255, 126, 204) }
@@ -2128,7 +2076,7 @@ function Window:_updateSeasonalDecorations(name)
 	if not fx then return end
 	fx.Visible = true
 	local winter, halloween = name == "Winter", name == "Halloween"
-	if self.Content then animate(self.Content, "BackgroundTransparency", halloween and 0.12 or 0, "Soft") end
+	if self.Content then animate(self.Content, "BackgroundTransparency", 0, "Soft") end
 	if winter and not self.WinterFader.Root.Visible then self.WinterFader:Show(nil, "Soft")
 	elseif not winter and self.WinterFader.Root.Visible then self.WinterFader:Hide(nil, "Smooth") end
 	if halloween and not self.HalloweenFader.Root.Visible then self.HalloweenFader:Show(nil, "Soft")
@@ -2740,6 +2688,9 @@ end
 function Window:SetVisible(visible)
 	if self.Visible == visible then return end
 	self.Visible = visible
+	for _, frame in { self.Watermark, self.Hotkeys } do
+		if frame then self:SetOverlayVisible(frame, visible and self.OverlayEnabled[frame] ~= false) end
+	end
 	self.VisibilityGeneration += 1
 	local generation = self.VisibilityGeneration
 	self.VisibilityTransition = true
@@ -2948,8 +2899,8 @@ function Window:BuildSettings(tab)
 	local menu = tab:Section({ Name = "Menu", Icon = "cube", Side = 2 })
 	local menuBind = menu:Keybind({ Name = "Menu Key", Default = self.MenuKey, NoSave = true })
 	menuBind.OnKeyChanged = function() self.MenuKey = menuBind.Key end
-	menu:Toggle({ Name = "Watermark", Default = true, NoSave = true, Callback = function(value) self:SetOverlayVisible(self.Watermark, value) end })
-	menu:Toggle({ Name = "Hotkey List", Default = true, NoSave = true, Callback = function(value) self:SetOverlayVisible(self.Hotkeys, value) end })
+	menu:Toggle({ Name = "Watermark", Default = true, NoSave = true, Callback = function(value) self.OverlayEnabled[self.Watermark] = value; self:SetOverlayVisible(self.Watermark, value and self.Visible) end })
+	menu:Toggle({ Name = "Hotkey List", Default = true, NoSave = true, Callback = function(value) self.OverlayEnabled[self.Hotkeys] = value; self:SetOverlayVisible(self.Hotkeys, value and self.Visible) end })
 	menu:Dropdown({ Name = "Font", Options = FontOrder, Default = "Inter", NoSave = true, Callback = function(value) self:SetFont(value) end })
 	menu:Dropdown({ Name = "Text Weight", Options = WeightOrder, Default = BodyWeight.Name, NoSave = true, Callback = function(value) self:SetTextWeight(value) end })
 
@@ -2962,42 +2913,30 @@ end
 
 function Window:_buildWatermark(options)
 	local player = Players.LocalPlayer
-	local frame = new("Frame", { Name = "IxaWatermark", Bg = "Background", Size = Offset(356, 64), Radius = Metrics.FloatRadius, Border = "Outline", Active = true }, self.Screen)
-	addShadow(frame, "Large")
-	local gradient = new("UIGradient", { Rotation = 18 }, frame)
-	bind(gradient, "Color", function() return ColorSequence.new(Current.Tab, Current.Background) end)
-	new("Frame", { Bg = "Accent", Position = Offset(10, 0), Size = Offset(86, 2), Radius = FULL }, frame)
-	makeIxaMark(frame, 20, { Position = Offset(13, 9) })
-	label(frame, { Text = options.Title or "ixa script", TextSize = 15, Weight = Enum.FontWeight.Bold, X = 42, Y = 4, RowH = 26, W = 180 })
-	local status = new("Frame", { Bg = "Inline", Position = Offset(289, 9), Size = Offset(56, 20), Radius = FULL }, frame)
-	new("Frame", { Bg = "Accent", Position = Offset(7, 7), Size = Offset(6, 6), Radius = FULL }, status)
-	label(status, { Text = "READY", TextSize = 9, Weight = Enum.FontWeight.Bold, Fg = "Text", X = 17, RowH = 20, W = 34 })
-	local scriptIcon = makeIcon(frame, "file", 12, "InactiveText", "Background", { Position = Offset(13, 40) })
-	local scriptText = label(frame, { Text = options.Script or "ixa.lua", TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "InactiveText", X = 30, Y = 35, RowH = 20, W = 92, Truncate = Enum.TextTruncate.AtEnd })
-	new("Frame", { Bg = "Outline", Position = Offset(128, 39), Size = Offset(1, 17) }, frame)
-	local buildIcon = makeIcon(frame, "cube", 12, "Accent", "Background", { Position = Offset(139, 40) })
-	local buildText = label(frame, { Text = options.Build or "release", TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "InactiveText", X = 156, Y = 35, RowH = 20, W = 54, Truncate = Enum.TextTruncate.AtEnd })
-	new("Frame", { Bg = "Outline", Position = Offset(218, 39), Size = Offset(1, 17) }, frame)
-	local userIcon = makeIcon(frame, "user", 12, "InactiveText", "Background", { Position = Offset(229, 40) })
-	local userText = label(frame, { Text = player and player.DisplayName or "Player", TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "InactiveText", X = 246, Y = 35, RowH = 20, W = 98, Truncate = Enum.TextTruncate.AtEnd })
+	local frame = new("Frame", { Name = "IxaWatermark", Bg = "Background", Size = Offset(294, 52), Radius = Metrics.FloatRadius, Border = "Outline", Active = true }, self.Screen)
+	addShadow(frame, "Medium")
+	makeIxaMark(frame, 17, { Position = Offset(11, 7) })
+	label(frame, { Text = options.Title or "ixa script", TextSize = 13, Weight = Enum.FontWeight.SemiBold, X = 35, Y = 2, RowH = 25, W = 240 })
+	new("Frame", { Bg = "Outline", Position = Offset(11, 27), Size = Offset(272, 1) }, frame)
+	makeIcon(frame, "user", 11, "InactiveText", "Background", { Position = Offset(12, 35) })
+	local userText = label(frame, { Text = player and player.DisplayName or "Player", TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "InactiveText", X = 29, Y = 29, RowH = 20, W = 92, Truncate = Enum.TextTruncate.AtEnd })
+	new("Frame", { Bg = "Outline", Position = Offset(126, 34), Size = Offset(1, 14) }, frame)
+	makeIcon(frame, "file", 11, "Accent", "Background", { Position = Offset(137, 35) })
+	label(frame, { Text = options.Script or "ixa.lua", TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "InactiveText", X = 154, Y = 29, RowH = 20, W = 126, Truncate = Enum.TextTruncate.AtEnd })
 	self.Watermark = frame
 	self.WatermarkFader = newFader(frame)
-	self.WatermarkParts = { ScriptIcon = scriptIcon, Script = scriptText, BuildIcon = buildIcon, Build = buildText, UserIcon = userIcon, User = userText }
+	self.WatermarkParts = { User = userText }
 	self.WatermarkLayout = function() self:_placeOverlays() end
 	self:_makeDraggable(frame, frame)
 end
 
 function Window:_buildHotkeys()
-	local holder = new("Frame", { Name = "IxaKeybindList", Bg = "Background", Size = Offset(236, 44), Radius = Metrics.FloatRadius, Border = "Outline", Active = true }, self.Screen)
-	addShadow(holder, "Large")
-	local gradient = new("UIGradient", { Rotation = 18 }, holder)
-	bind(gradient, "Color", function() return ColorSequence.new(Current.Tab, Current.Background) end)
-	new("Frame", { Bg = "Accent", Position = Offset(10, 0), Size = Offset(70, 2), Radius = FULL }, holder)
-	local head = new("Frame", { Position = Offset(1, 2), Size = Dim2(1, -2, 0, 35), BackgroundTransparency = 1, Active = true }, holder)
-	makeIcon(head, "key", 15, "Accent", "Background", { Position = Offset(11, 10) })
-	label(head, { Text = "Keybinds", TextSize = 12, Weight = Enum.FontWeight.SemiBold, X = 35, Y = 4, RowH = 26, W = 120 })
-	local count = new("Frame", { Bg = "Inline", Position = Dim2(1, -38, 0, 8), Size = Offset(27, 19), Radius = FULL, Border = "Outline" }, head)
-	self.HotkeyCount = label(count, { Text = "00", TextSize = 9, Weight = Enum.FontWeight.Bold, Fg = "Accent", RowH = 19, W = 27 })
+	local holder = new("Frame", { Name = "IxaKeybindList", Bg = "Background", Size = Offset(220, 41), Radius = Metrics.FloatRadius, Border = "Outline", Active = true }, self.Screen)
+	addShadow(holder, "Medium")
+	local head = new("Frame", { Position = Offset(1, 1), Size = Dim2(1, -2, 0, 32), BackgroundTransparency = 1, Active = true }, holder)
+	makeIcon(head, "key", 13, "Accent", "Background", { Position = Offset(11, 9) })
+	label(head, { Text = "Keybinds", TextSize = 12, Weight = Enum.FontWeight.Medium, X = 33, Y = 2, RowH = 27, W = 160 })
+	new("Frame", { Bg = "Outline", Position = Offset(10, 33), Size = Offset(200, 1) }, holder)
 	self.Hotkeys = holder
 	self.HotkeysFader = newFader(holder)
 	self:_makeDraggable(head, holder)
@@ -3060,7 +2999,7 @@ function Blossom.new(options)
 		Title = options.Title or "ixa script", Tabs = {}, Sections = {}, Columns = {}, Index = {}, Binds = {}, Colors = {}, Flags = {},
 		ThemeRows = {}, HotkeyEntries = {}, HotkeyOrder = {}, NotifyStack = {}, Connections = {}, Jobs = {}, Moved = {}, PendingThemeKeys = {}, FlagOwners = {},
 		ThemeClock = 0, SidebarY = Metrics.FirstCategory, SidebarHasTabs = false, SidebarAfterCategory = false,
-		VisibilityGeneration = 0, OverlayRest = {}, OverlayTarget = {}, OverlayAnimating = {},
+		VisibilityGeneration = 0, OverlayRest = {}, OverlayTarget = {}, OverlayAnimating = {}, OverlayEnabled = {},
 		Visible = true, ThemeName = options.Theme or "Obsidian", MenuKey = options.MenuKey or Enum.KeyCode.RightShift,
 		LastPopupTime = 0, DropdownClosedAt = 0,
 	}, Window)
@@ -3081,8 +3020,6 @@ function Blossom.new(options)
 	local root = new("Frame", { Bg = "Background", Active = true, Size = Dim2(1, 0, 1, 0), Radius = Metrics.WindowRadius, Border = "Outline" }, holder)
 	addShadow(root, "Large")
 	win.Root = root
-	win:_buildSeasonalDecorations()
-	
 	win.ModalButton = new("TextButton", { Modal = true, Size = Offset(1, 1) }, holder)
 
 	local sidebar = new("Frame", { Size = Dim2(0, Metrics.SidebarW, 1, 0) }, root)
@@ -3119,6 +3056,7 @@ function Blossom.new(options)
 	win:_buildKeybindMenu()
 	win:_buildPicker()
 	win:_buildSearch()
+	win:_buildSeasonalDecorations()
 	if options.Resizable ~= false then win:_buildResize() end
 	win:_placeOverlays()
 	win.WatermarkLayout()
