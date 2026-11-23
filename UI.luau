@@ -1,4 +1,3 @@
--- z
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -46,9 +45,9 @@ local Themes = {
 		Gradient = RGB(170, 170, 158), Shadow = RGB(0, 0, 0), HoveredElement = RGB(58, 58, 44),
 	},
 	Obsidian = {
-		Background = RGB(16, 16, 18), Tab = RGB(12, 11, 14), Outline = RGB(44, 42, 52), Inline = RGB(24, 24, 29),
-		Text = RGB(234, 232, 244), InactiveText = RGB(118, 114, 134), Accent = RGB(159, 109, 255), Element = RGB(24, 23, 31),
-		Gradient = RGB(166, 164, 175), Shadow = RGB(0, 0, 0), HoveredElement = RGB(236, 240, 248),
+		Background = RGB(20, 16, 28), Tab = RGB(27, 21, 38), Outline = RGB(62, 48, 82), Inline = RGB(31, 24, 45),
+		Text = RGB(247, 241, 255), InactiveText = RGB(163, 149, 186), Accent = RGB(184, 139, 255), Element = RGB(34, 26, 49),
+		Gradient = RGB(203, 179, 255), Shadow = RGB(0, 0, 0), HoveredElement = RGB(65, 48, 88),
 	},
 	Winter = {
 		Background = RGB(14, 22, 37), Tab = RGB(18, 29, 47), Outline = RGB(47, 72, 99), Inline = RGB(23, 38, 59),
@@ -1816,37 +1815,86 @@ function Window:SelectTab(tab, instant)
 	end
 end
 
+function Window:SetOverlayVisible(frame, visible)
+	local fader = frame == self.Watermark and self.WatermarkFader or self.HotkeysFader
+	if not frame or not fader or self.OverlayTarget[frame] == visible then return end
+	self.OverlayTarget[frame] = visible
+	local rest = self.OverlayRest[frame] or frame.Position
+	local hiddenOffset = frame == self.Watermark and Offset(0, 9) or Offset(-11, 0)
+	self.OverlayAnimating[frame] = true
+	if visible then
+		if not frame.Visible then snap(frame, "Position", rest + hiddenOffset) end
+		fader:Show(function()
+			if self.OverlayTarget[frame] == true then self.OverlayAnimating[frame] = nil end
+		end, "Smooth")
+		animate(frame, "Position", rest, "Smooth")
+	else
+		animate(frame, "Position", rest + hiddenOffset, "Smooth")
+		fader:Hide(function()
+			if self.OverlayTarget[frame] == false then self.OverlayAnimating[frame] = nil end
+		end, "Smooth")
+	end
+end
+
+function Window:_layoutHotkeys(animated)
+	local rowHeight, rowGap, top = 30, 5, 40
+	local height = 44 + #self.HotkeyOrder * (rowHeight + rowGap)
+	local size = Offset(236, height)
+	if animated then
+		self.HotkeyLayoutAnimating = true
+		animate(self.Hotkeys, "Size", size, "Smooth", {
+			Done = function()
+				self.HotkeyLayoutAnimating = false
+				self:_placeOverlays()
+			end,
+		})
+	else
+		snap(self.Hotkeys, "Size", size)
+	end
+	for index, object in self.HotkeyOrder do
+		local entry = self.HotkeyEntries[object]
+		if entry then place(entry.Frame, "Position", Offset(10, top + (index - 1) * (rowHeight + rowGap)), animated, "Settle") end
+	end
+	setText(self.HotkeyCount, string.format("%02d", #self.HotkeyOrder))
+	if not self.Moved[self.Hotkeys] and not self.OverlayAnimating[self.Hotkeys] and not self.HotkeyLayoutAnimating then self:_placeOverlays() end
+end
+
 function Window:SetHotkeyActive(object, active)
 	local entry = self.HotkeyEntries[object]
 	local shouldShow = active and object.Key ~= nil
 	if shouldShow and not entry then
-		local frame = new("Frame", { Bg = "Background", Size = Offset(40, 24), Radius = Metrics.FloatRadius, Border = "Outline", Visible = false }, self.Hotkeys)
-		new("Frame", { Bg = "Accent", Position = Offset(1, 5), Size = Offset(2, 14), Radius = Metrics.SmallRadius }, frame)
-		local text = label(frame, { TextSize = 12, X = Metrics.Pad, RowH = 24, Weight = Enum.FontWeight.SemiBold })
-		entry = { Frame = frame, Label = text, Fader = newFader(frame) }
+		local frame = new("Frame", {
+			Name = "HotkeyRow", Bg = "Inline", Position = Offset(-8, 40), Size = Offset(216, 30),
+			Radius = Metrics.PillRadius, Border = "Outline", Visible = false,
+		}, self.Hotkeys)
+		new("Frame", { Bg = "Accent", Position = Offset(7, 9), Size = Offset(2, 12), Radius = FULL }, frame)
+		local name = label(frame, { TextSize = 11, X = 17, RowH = 30, W = 104, Weight = Enum.FontWeight.Medium, Truncate = Enum.TextTruncate.AtEnd })
+		local keyFrame = new("Frame", { Bg = "Element", Position = Offset(128, 4), Size = Offset(79, 22), Radius = Metrics.PillRadius, Border = "Outline" }, frame)
+		local key = label(keyFrame, { TextSize = 10, Weight = Enum.FontWeight.SemiBold, RowH = 22, W = 79 })
+		key.TextXAlignment = Enum.TextXAlignment.Center
+		entry = { Frame = frame, Label = name, KeyLabel = key, Fader = newFader(frame) }
 		self.HotkeyEntries[object] = entry
 		table.insert(self.HotkeyOrder, object)
-		text:GetPropertyChangedSignal("TextBounds"):Connect(function()
-			frame.Size = Offset(math.ceil(text.TextBounds.X) + Metrics.Pad * 2, 24)
-		end)
-		setText(text, (object.Name or "Key") .. " - " .. keyName(object.Key))
-		frame.Size = Offset(math.ceil(text.TextBounds.X) + Metrics.Pad * 2, 24)
-		frame.Position = Offset(-14, 33 * #self.HotkeyOrder + 1)
-		entry.Fader:Show()
+		setText(name, object.Name or "Key")
+		setText(key, keyName(object.Key))
+		frame.Position = Offset(-8, 40 + (#self.HotkeyOrder - 1) * 35)
+		entry.Fader:Show(nil, "Smooth")
+		if self.OverlayTarget[self.Hotkeys] ~= false then self:SetOverlayVisible(self.Hotkeys, true) end
 	elseif entry and shouldShow then
-		setText(entry.Label, (object.Name or "Key") .. " - " .. keyName(object.Key))
+		setText(entry.Label, object.Name or "Key")
+		setText(entry.KeyLabel, keyName(object.Key))
+		self:_layoutHotkeys(true)
 		return
 	elseif entry then
 		self.HotkeyEntries[object] = nil
-		table.remove(self.HotkeyOrder, table.find(self.HotkeyOrder, object))
-		animate(entry.Frame, "Position", Offset(-14, entry.Frame.Position.Y.Offset), "Smooth")
-		entry.Fader:Hide(function() entry.Frame:Destroy() end)
+		local index = table.find(self.HotkeyOrder, object)
+		if index then table.remove(self.HotkeyOrder, index) end
+		animate(entry.Frame, "Position", Offset(-8, entry.Frame.Position.Y.Offset), "Smooth")
+		entry.Fader:Hide(function() entry.Frame:Destroy() end, "Smooth")
 	else
 		return
 	end
-	for index, key in self.HotkeyOrder do
-		animate(self.HotkeyEntries[key].Frame, "Position", Offset(1, 33 * index + 1), "Settle")
-	end
+	self:_layoutHotkeys(true)
 end
 
 function Window:Notify(options)
@@ -2219,6 +2267,7 @@ function Window:SetSize(width, height)
 	local position = self.Holder.Position
 	snap(self.Holder, "Position", Offset(position.X.Offset + (width - self.Width) / 2, position.Y.Offset + (height - self.Height) / 2))
 	self.Moved[self.Holder] = true
+	self.PanelRestPosition = self.Holder.Position
 	self:_applySize(width, height)
 end
 
@@ -2235,7 +2284,8 @@ function Window:_beginResize(axisX, axisY, onEnd)
 		local height = axisY == 1 and evenClamp(startH + delta.Y, minHeight, screen.Y - top - 4) or startH
 		if width == self.Width and height == self.Height then return end
 		self.Moved[self.Holder] = true
-		snap(self.Holder, "Position", Offset(left + width / 2, top + height / 2))
+		self.PanelRestPosition = Offset(left + width / 2, top + height / 2)
+		snap(self.Holder, "Position", self.PanelRestPosition)
 		self:_applySize(width, height)
 	end, onEnd)
 end
@@ -2271,7 +2321,10 @@ function Window:_makeDraggable(handle, target, allowed)
 			local delta = point - start
 			if delta.Magnitude < 1 and not self.Moved[target] then return end
 			self.Moved[target] = true
-			animate(target, "Position", self:_clamped(target, origin.X.Offset + delta.X, origin.Y.Offset + delta.Y), "Follow")
+			local position = self:_clamped(target, origin.X.Offset + delta.X, origin.Y.Offset + delta.Y)
+			if target == self.Holder then self.PanelRestPosition = position end
+			if target == self.Watermark or target == self.Hotkeys then self.OverlayRest[target] = position end
+			animate(target, "Position", position, "Follow")
 		end)
 	end)
 end
@@ -2631,23 +2684,41 @@ end
 function Window:SetVisible(visible)
 	if self.Visible == visible then return end
 	self.Visible = visible
+	self.VisibilityGeneration += 1
+	local generation = self.VisibilityGeneration
+	self.VisibilityTransition = true
 	self:CloseFloating()
 	self.ModalButton.Visible = visible
 	if not self.Scale.Parent then
-		if not visible then self.Scale.Scale = 0.94 end
+		self.Scale.Scale = visible and 0.91 or 1
 		self.Scale.Parent = self.Holder
 	end
+	local basePosition = self.PanelRestPosition or self.Holder.Position
+	local transitionOffset = Offset(0, 9)
 	if visible then
-		animate(self.Scale, "Scale", 1, "Soft", {
-			-- A UIScale is removed once idle so text is never resampled at rest.
+		if not self.Holder.Visible then snap(self.Holder, "Position", basePosition + transitionOffset) end
+		self.Holder.Visible = true
+		animate(self.Root, "GroupTransparency", 0, "Smooth", {
 			Done = function()
-				if self.Visible then self.Scale.Parent = nil end
+				if generation == self.VisibilityGeneration and self.Visible then
+					self.Scale.Parent = nil
+					self.VisibilityTransition = false
+				end
 			end,
 		})
-		self.Fader:Show(nil, "Soft")
+		animate(self.Holder, "Position", basePosition, "Smooth")
+		animate(self.Scale, "Scale", 1, "Smooth")
 	else
+		animate(self.Root, "GroupTransparency", 1, "Smooth", {
+			Done = function()
+				if generation ~= self.VisibilityGeneration or self.Visible then return end
+				self.Holder.Visible = false
+				self.Scale.Parent = nil
+				self.VisibilityTransition = false
+			end,
+		})
+		animate(self.Holder, "Position", basePosition + transitionOffset, "Smooth")
 		animate(self.Scale, "Scale", 0.94, "Smooth")
-		self.Fader:Hide(nil, "Smooth")
 	end
 end
 
@@ -2825,8 +2896,8 @@ function Window:BuildSettings(tab)
 	local menu = tab:Section({ Name = "Menu", Icon = "cube", Side = 2 })
 	local menuBind = menu:Keybind({ Name = "Menu Key", Default = self.MenuKey, NoSave = true })
 	menuBind.OnKeyChanged = function() self.MenuKey = menuBind.Key end
-	menu:Toggle({ Name = "Watermark", Default = true, NoSave = true, Callback = function(value) self.Watermark.Visible = value end })
-	menu:Toggle({ Name = "Hotkey List", Default = true, NoSave = true, Callback = function(value) self.Hotkeys.Visible = value end })
+	menu:Toggle({ Name = "Watermark", Default = true, NoSave = true, Callback = function(value) self:SetOverlayVisible(self.Watermark, value) end })
+	menu:Toggle({ Name = "Hotkey List", Default = true, NoSave = true, Callback = function(value) self:SetOverlayVisible(self.Hotkeys, value) end })
 	menu:Dropdown({ Name = "Font", Options = FontOrder, Default = "Inter", NoSave = true, Callback = function(value) self:SetFont(value) end })
 	menu:Dropdown({ Name = "Text Weight", Options = WeightOrder, Default = BodyWeight.Name, NoSave = true, Callback = function(value) self:SetTextWeight(value) end })
 
@@ -2839,53 +2910,44 @@ end
 
 function Window:_buildWatermark(options)
 	local player = Players.LocalPlayer
-	local frame = new("Frame", { Bg = "Background", Size = Offset(298, 28), Radius = Metrics.FloatRadius, Border = "Outline", Active = true }, self.Screen)
-	makeIcon(frame, "logo", 16, "Accent", "Background", { Position = Offset(8, 6) })
-	local function text(value, size, weight)
-		return label(frame, { Text = value, TextSize = size, Weight = weight, RowH = 28, W = 10 })
-	end
-	local function sep()
-		return new("Frame", { Bg = "Outline", Position = Offset(0, 7), Size = Offset(1, 14) }, frame)
-	end
-	local first, firstSep = text(options.Script or "blossom.lua", 12, Enum.FontWeight.Medium), sep()
-	local second, secondSep = text(options.Build or "release", 12, Enum.FontWeight.SemiBold), sep()
-	local userIcon = makeIcon(frame, "user", 13, "Text", "Background")
-	local third = text(("%s (@%s)"):format(player.DisplayName, player.Name), 11, Enum.FontWeight.SemiBold)
-	local function layout()
-		local x = 31
-		for _, entry in { { first, firstSep }, { second, secondSep } } do
-			local width = math.ceil(entry[1].TextBounds.X)
-			entry[1].Size = Offset(width + 1, 28)
-			entry[1].Position = Offset(x, entry[1].Position.Y.Offset)
-			x += width + 8
-			entry[2].Position = Offset(x, 7)
-			x += 9
-		end
-		userIcon.Root.Position = Offset(x, 7)
-		x += 20
-		local width = math.ceil(third.TextBounds.X)
-		third.Size = Offset(width + 1, 28)
-		third.Position = Offset(x, third.Position.Y.Offset)
-		frame.Size = Offset(x + width + Metrics.Pad, 28)
-		self:_placeOverlays()
-	end
-	for _, entry in { first, second, third } do
-		entry:GetPropertyChangedSignal("TextBounds"):Connect(layout)
-	end
+	local frame = new("Frame", { Name = "IxaWatermark", Bg = "Background", Size = Offset(356, 64), Radius = Metrics.FloatRadius, Border = "Outline", Active = true }, self.Screen)
+	addShadow(frame, "Large")
+	local gradient = new("UIGradient", { Rotation = 18 }, frame)
+	bind(gradient, "Color", function() return ColorSequence.new(Current.Tab, Current.Background) end)
+	new("Frame", { Bg = "Accent", Position = Offset(10, 0), Size = Offset(86, 2), Radius = FULL }, frame)
+	makeIcon(frame, IXA_LOGO_URL, 20, "Accent", "Background", { Position = Offset(13, 9) })
+	label(frame, { Text = options.Title or "ixa script", TextSize = 15, Weight = Enum.FontWeight.Bold, X = 42, Y = 4, RowH = 26, W = 180 })
+	local status = new("Frame", { Bg = "Inline", Position = Offset(289, 9), Size = Offset(56, 20), Radius = FULL }, frame)
+	new("Frame", { Bg = "Accent", Position = Offset(7, 7), Size = Offset(6, 6), Radius = FULL }, status)
+	label(status, { Text = "READY", TextSize = 9, Weight = Enum.FontWeight.Bold, Fg = "Text", X = 17, RowH = 20, W = 34 })
+	local scriptIcon = makeIcon(frame, "file", 12, "InactiveText", "Background", { Position = Offset(13, 40) })
+	local scriptText = label(frame, { Text = options.Script or "ixa.lua", TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "InactiveText", X = 30, Y = 35, RowH = 20, W = 92, Truncate = Enum.TextTruncate.AtEnd })
+	new("Frame", { Bg = "Outline", Position = Offset(128, 39), Size = Offset(1, 17) }, frame)
+	local buildIcon = makeIcon(frame, "cube", 12, "Accent", "Background", { Position = Offset(139, 40) })
+	local buildText = label(frame, { Text = options.Build or "release", TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "InactiveText", X = 156, Y = 35, RowH = 20, W = 54, Truncate = Enum.TextTruncate.AtEnd })
+	new("Frame", { Bg = "Outline", Position = Offset(218, 39), Size = Offset(1, 17) }, frame)
+	local userIcon = makeIcon(frame, "user", 12, "InactiveText", "Background", { Position = Offset(229, 40) })
+	local userText = label(frame, { Text = player and player.DisplayName or "Player", TextSize = 10, Weight = Enum.FontWeight.Medium, Fg = "InactiveText", X = 246, Y = 35, RowH = 20, W = 98, Truncate = Enum.TextTruncate.AtEnd })
 	self.Watermark = frame
-	self.WatermarkLayout = layout
+	self.WatermarkFader = newFader(frame)
+	self.WatermarkParts = { ScriptIcon = scriptIcon, Script = scriptText, BuildIcon = buildIcon, Build = buildText, UserIcon = userIcon, User = userText }
+	self.WatermarkLayout = function() self:_placeOverlays() end
 	self:_makeDraggable(frame, frame)
 end
 
 function Window:_buildHotkeys()
-	local holder = new("Frame", { Size = Offset(200, 300) }, self.Screen)
-	local head = new("Frame", { Bg = "Background", Position = Offset(1, 1), Size = Offset(88, 25), Radius = Metrics.FloatRadius, Border = "Outline", Active = true }, holder)
-	makeIcon(head, "key", 14, "Accent", "Background", { Position = Offset(9, 5) })
-	local text = label(head, { Text = "Hotkeys", TextSize = 12, Weight = Enum.FontWeight.SemiBold, X = 31, RowH = 25 })
-	local function fit() head.Size = Offset(math.ceil(text.TextBounds.X) + 41, 25) end
-	text:GetPropertyChangedSignal("TextBounds"):Connect(fit)
-	fit()
+	local holder = new("Frame", { Name = "IxaKeybindList", Bg = "Background", Size = Offset(236, 44), Radius = Metrics.FloatRadius, Border = "Outline", Active = true }, self.Screen)
+	addShadow(holder, "Large")
+	local gradient = new("UIGradient", { Rotation = 18 }, holder)
+	bind(gradient, "Color", function() return ColorSequence.new(Current.Tab, Current.Background) end)
+	new("Frame", { Bg = "Accent", Position = Offset(10, 0), Size = Offset(70, 2), Radius = FULL }, holder)
+	local head = new("Frame", { Position = Offset(1, 2), Size = Dim2(1, -2, 0, 35), BackgroundTransparency = 1, Active = true }, holder)
+	makeIcon(head, "key", 15, "Accent", "Background", { Position = Offset(11, 10) })
+	label(head, { Text = "Keybinds", TextSize = 12, Weight = Enum.FontWeight.SemiBold, X = 35, Y = 4, RowH = 26, W = 120 })
+	local count = new("Frame", { Bg = "Inline", Position = Dim2(1, -38, 0, 8), Size = Offset(27, 19), Radius = FULL, Border = "Outline" }, head)
+	self.HotkeyCount = label(count, { Text = "00", TextSize = 9, Weight = Enum.FontWeight.Bold, Fg = "Accent", RowH = 19, W = 27 })
 	self.Hotkeys = holder
+	self.HotkeysFader = newFader(holder)
 	self:_makeDraggable(head, holder)
 end
 
@@ -2893,11 +2955,18 @@ end
 function Window:_placeOverlays()
 	local size = self.Screen.AbsoluteSize
 	if size.X <= 0 then return end
-	if not self.Moved[self.Holder] then self.Holder.Position = Offset(floor(size.X / 2), floor(size.Y / 2)) end
-	if self.Watermark and not self.Moved[self.Watermark] then
-		self.Watermark.Position = Offset(floor((size.X - self.Watermark.Size.X.Offset) / 2), size.Y - 44)
+	if not self.Moved[self.Holder] then
+		self.PanelRestPosition = Offset(floor(size.X / 2), floor(size.Y / 2))
+		if not self.VisibilityTransition then self.Holder.Position = self.PanelRestPosition end
 	end
-	if self.Hotkeys and not self.Moved[self.Hotkeys] then self.Hotkeys.Position = Offset(14, floor((size.Y - 300) / 2)) end
+	if self.Watermark and not self.Moved[self.Watermark] then
+		self.OverlayRest[self.Watermark] = Offset(floor((size.X - self.Watermark.Size.X.Offset) / 2), size.Y - self.Watermark.Size.Y.Offset - 18)
+		if not self.OverlayAnimating[self.Watermark] then self.Watermark.Position = self.OverlayRest[self.Watermark] end
+	end
+	if self.Hotkeys and not self.Moved[self.Hotkeys] then
+		self.OverlayRest[self.Hotkeys] = Offset(14, floor((size.Y - self.Hotkeys.Size.Y.Offset) / 2))
+		if not self.OverlayAnimating[self.Hotkeys] and not self.HotkeyLayoutAnimating then self.Hotkeys.Position = self.OverlayRest[self.Hotkeys] end
+	end
 end
 
 function Window:Destroy()
@@ -2939,6 +3008,7 @@ function Blossom.new(options)
 		Title = options.Title or "ixa script", Tabs = {}, Sections = {}, Columns = {}, Index = {}, Binds = {}, Colors = {}, Flags = {},
 		ThemeRows = {}, HotkeyEntries = {}, HotkeyOrder = {}, NotifyStack = {}, Connections = {}, Jobs = {}, Moved = {}, PendingThemeKeys = {}, FlagOwners = {},
 		ThemeClock = 0, SidebarY = Metrics.FirstCategory, SidebarHasTabs = false, SidebarAfterCategory = false,
+		VisibilityGeneration = 0, OverlayRest = {}, OverlayTarget = {}, OverlayAnimating = {},
 		Visible = true, ThemeName = options.Theme or "Obsidian", MenuKey = options.MenuKey or Enum.KeyCode.RightShift,
 		LastPopupTime = 0, DropdownClosedAt = 0,
 	}, Window)
@@ -2956,10 +3026,9 @@ function Blossom.new(options)
 	}, screen)
 	win.Holder = holder
 	win.Scale = new("UIScale", { Scale = 0.9 })
-	local root = new("Frame", { Bg = "Background", Active = true, Size = Dim2(1, 0, 1, 0), Radius = Metrics.WindowRadius, Border = "Outline" }, holder)
+	local root = new("CanvasGroup", { Bg = "Background", Active = true, GroupTransparency = 1, Size = Dim2(1, 0, 1, 0), Radius = Metrics.WindowRadius, Border = "Outline" }, holder)
 	addShadow(root, "Large")
 	win.Root = root
-	win.Fader = newFader(holder)
 	-- A Modal button frees the cursor from first-person camera lock while the menu is open.
 	win.ModalButton = new("TextButton", { Modal = true, Size = Offset(1, 1) }, holder)
 
@@ -3116,8 +3185,8 @@ function Blossom.new(options)
 	task.defer(function()
 		if win.Screen.Parent == nil then return end
 		win:SetVisible(true)
-		newFader(win.Watermark):Show()
-		newFader(win.Hotkeys):Show()
+		win:SetOverlayVisible(win.Watermark, true)
+		win:SetOverlayVisible(win.Hotkeys, true)
 	end)
 
 	return win
