@@ -2965,7 +2965,7 @@ function Window:_buildWatermark(options)
 	local titleLbl = Instance.new("TextLabel")
 	titleLbl.Text = options.Title or "ixa script"
 	titleLbl.TextSize = 12
-	titleLbl.Font = Enum.Font.BuilderSansSemibold
+	titleLbl.Font = Enum.Font.BuilderSansBold
 	titleLbl.TextColor3 = RGB(230, 230, 236)
 	titleLbl.TextTransparency = 0
 	titleLbl.BackgroundTransparency = 1
@@ -3051,7 +3051,7 @@ function Window:_buildHotkeys()
 	local titleLbl = Instance.new("TextLabel")
 	titleLbl.Text = "Keybinds"
 	titleLbl.TextSize = 12
-	titleLbl.Font = Enum.Font.BuilderSansSemibold
+	titleLbl.Font = Enum.Font.BuilderSansBold
 	titleLbl.TextColor3 = RGB(230, 230, 236)
 	titleLbl.BackgroundTransparency = 1
 	titleLbl.AutomaticSize = Enum.AutomaticSize.X
