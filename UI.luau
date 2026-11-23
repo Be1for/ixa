@@ -1,3 +1,4 @@
+-- z
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -1902,8 +1903,65 @@ function Window:ApplyTheme(name, silent)
 	if not silent then self:Notify(('Applied "%s" theme.'):format(name)) end
 end
 
--- Seasonal accents are native, passive GUI objects; they need no external assets and
--- remain clipped to the window so they never cover the surrounding game view.
+local function outlineShape(shape, color, thickness, transparency)
+	local stroke = Instance.new("UIStroke")
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Color = color
+	stroke.Thickness = thickness or 1
+	stroke.Transparency = transparency or 0
+	stroke.Parent = shape
+	return stroke
+end
+
+local function seasonalShape(parent, name, x, y, width, height, color, radius, rotation, zIndex)
+	return new("Frame", {
+		Name = name, Position = Offset(x, y), Size = Offset(width, height),
+		BackgroundColor3 = color, BackgroundTransparency = 0, Radius = radius or FULL,
+		Rotation = rotation or 0, ZIndex = zIndex or 35,
+	}, parent)
+end
+
+local function buildHalloweenIcon(parent, kind, x, y, index)
+	local root = new("Frame", {
+		Name = kind .. "Icon", Position = UDim2.fromScale(x, y), Size = Offset(42, 42),
+		BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 34,
+	}, parent)
+	root:SetAttribute("FloatIndex", index)
+	root:SetAttribute("BaseX", x)
+	root:SetAttribute("BaseY", y)
+	local ink = RGB(39, 22, 48)
+	if kind == "Pumpkin" then
+		local orange, deepOrange = RGB(255, 137, 48), RGB(185, 68, 31)
+		local left = seasonalShape(root, "PumpkinRib", 2, 15, 18, 21, orange, FULL, 0, 35)
+		local right = seasonalShape(root, "PumpkinRib", 22, 15, 18, 21, orange, FULL, 0, 35)
+		outlineShape(left, deepOrange, 1.2, 0.08)
+		outlineShape(right, deepOrange, 1.2, 0.08)
+		local body = seasonalShape(root, "PumpkinBody", 8, 12, 27, 26, orange, FULL, 0, 36)
+		outlineShape(body, deepOrange, 1.3, 0.02)
+		seasonalShape(root, "PumpkinStem", 19, 5, 7, 11, RGB(104, 166, 82), 3, 8, 37)
+		seasonalShape(root, "PumpkinLeaf", 25, 7, 9, 5, RGB(132, 184, 91), FULL, -27, 38)
+		seasonalShape(root, "CarvedEye", 15, 21, 5, 6, ink, 1, 45, 39)
+		seasonalShape(root, "CarvedEye", 27, 21, 5, 6, ink, 1, 45, 39)
+		seasonalShape(root, "CarvedSmile", 18, 31, 3, 3, ink, 1, 0, 39)
+		seasonalShape(root, "CarvedSmile", 22, 33, 4, 3, ink, 1, 0, 39)
+		seasonalShape(root, "CarvedSmile", 27, 31, 3, 3, ink, 1, 0, 39)
+		seasonalShape(root, "PumpkinHighlight", 11, 17, 2, 8, RGB(255, 190, 104), 2, 8, 38)
+	else
+		local ghost = RGB(239, 240, 255)
+		local head = seasonalShape(root, "GhostHead", 8, 4, 26, 26, ghost, FULL, 0, 35)
+		local body = seasonalShape(root, "GhostBody", 7, 17, 28, 16, ghost, 7, 0, 36)
+		outlineShape(head, RGB(178, 151, 234), 1.4, 0.02)
+		outlineShape(body, RGB(178, 151, 234), 1.4, 0.02)
+		for i = 1, 3 do seasonalShape(root, "GhostHem", 6 + (i - 1) * 10, 27, 11, 10, ghost, FULL, 0, 37) end
+		seasonalShape(root, "GhostEye", 15, 16, 4, 6, ink, FULL, 0, 39)
+		seasonalShape(root, "GhostEye", 24, 16, 4, 6, ink, FULL, 0, 39)
+		seasonalShape(root, "GhostMouth", 20, 23, 4, 4, RGB(120, 74, 130), FULL, 0, 39)
+		seasonalShape(root, "GhostCheek", 11, 23, 4, 2, RGB(255, 156, 175), FULL, 0, 39)
+		seasonalShape(root, "GhostCheek", 28, 23, 4, 2, RGB(255, 156, 175), FULL, 0, 39)
+	end
+	return root
+end
+
 function Window:_buildSeasonalDecorations()
 	local fx = new("Frame", {
 		Name = "SeasonalFX", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1,
@@ -1913,19 +1971,39 @@ function Window:_buildSeasonalDecorations()
 	local winterFx = new("Frame", { Name = "WinterLayer", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 31, Visible = false }, fx)
 	local halloweenFx = new("Frame", { Name = "HalloweenLayer", Size = Dim2(1, 0, 1, 0), BackgroundTransparency = 1, Active = false, Selectable = false, ZIndex = 31, Visible = false }, fx)
 	self.WinterFader, self.HalloweenFader = newFader(winterFx), newFader(halloweenFx)
-	self.SeasonSnow, self.SeasonLights, self.SeasonGhosts = {}, {}, {}
-	local wire = new("Frame", { Name = "GarlandWire", Position = Dim2(0, 0, 0, 5), Size = Dim2(1, 0, 0, 1), Rotation = 1, BackgroundColor3 = RGB(64, 112, 83), BackgroundTransparency = 0.15, ZIndex = 32 }, winterFx)
-	self.GarlandWire = wire
-	local lightColors = { RGB(255, 92, 89), RGB(255, 209, 87), RGB(105, 228, 158), RGB(118, 183, 255), RGB(255, 140, 205) }
+	self.SeasonSnow, self.SeasonLights, self.SeasonGhosts, self.GarlandSegments = {}, {}, {}, {}
+	local lightColors = { RGB(255, 82, 91), RGB(255, 194, 78), RGB(92, 234, 159), RGB(104, 179, 255), RGB(255, 126, 204) }
+	for i = 1, 12 do
+		local segment = new("Frame", {
+			Name = "GarlandWireSegment", AnchorPoint = Vec2(0.5, 0.5), Size = Dim2(1 / 12, 0, 0, 1),
+			BackgroundColor3 = RGB(57, 105, 71), BackgroundTransparency = 0.05, ZIndex = 32,
+		}, winterFx)
+		segment:SetAttribute("SegmentIndex", i)
+		table.insert(self.GarlandSegments, segment)
+	end
 	for i = 1, 13 do
 		local x = 0.045 + (i - 1) * 0.076
-		local y = 6 + math.sin(i * 0.65) * 4
-		local light = new("Frame", {
-			Name = "GarlandLight", Position = UDim2.new(x, -3, 0, y), Size = Offset(7, 7),
-			Radius = FULL, BackgroundColor3 = lightColors[(i - 1) % #lightColors + 1], ZIndex = 33,
+		local nodeY = 4 + math.sin((i - 1) / 12 * math.pi) * 12
+		local color = lightColors[(i - 1) % #lightColors + 1]
+		local glow = new("Frame", {
+			Name = "BulbGlow", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 7),
+			Size = Offset(17, 19), Radius = FULL, BackgroundColor3 = color, BackgroundTransparency = 0.62, ZIndex = 33,
 		}, winterFx)
-		light:SetAttribute("LightIndex", i)
-		table.insert(self.SeasonLights, light)
+		local socket = new("Frame", {
+			Name = "BulbSocket", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 1),
+			Size = Offset(4, 7), Radius = 2, BackgroundColor3 = RGB(59, 83, 63), ZIndex = 34,
+		}, winterFx)
+		local bulb = new("Frame", {
+			Name = "GarlandBulb", AnchorPoint = Vec2(0.5, 0), Position = UDim2.new(x, 0, 0, nodeY + 6),
+			Size = Offset(8, 11), Radius = FULL, BackgroundColor3 = color, ZIndex = 35,
+		}, winterFx)
+		outlineShape(bulb, color:Lerp(Color3.new(1, 1, 1), 0.38), 0.8, 0.12)
+		bulb:SetAttribute("LightIndex", i)
+		bulb:SetAttribute("BaseX", x)
+		bulb:SetAttribute("BulbColor", color)
+		glow:SetAttribute("LightIndex", i)
+		socket:SetAttribute("LightIndex", i)
+		table.insert(self.SeasonLights, { Bulb = bulb, Glow = glow, Socket = socket, X = x, Color = color })
 	end
 	for i = 1, 12 do
 		local snow = new("TextLabel", {
@@ -1937,15 +2015,10 @@ function Window:_buildSeasonalDecorations()
 		snow:SetAttribute("SnowIndex", i)
 		table.insert(self.SeasonSnow, snow)
 	end
-	for i, item in { { "👻", 0.84, 0.18 }, { "🎃", 0.04, 0.88 }, { "🦇", 0.80, 0.84 }, { "🎃", 0.91, 0.88 } } do
-		local accent = new("TextLabel", {
-			Name = "HalloweenAccent", Text = item[1], TextSize = item[1] == "🦇" and 20 or 24,
-			TextTransparency = 0.12, BackgroundTransparency = 1, Position = UDim2.fromScale(item[2], item[3]),
-			Size = Offset(32, 32), ZIndex = 34,
-		}, halloweenFx)
-		accent:SetAttribute("FloatIndex", i)
-		table.insert(self.SeasonGhosts, accent)
-	end
+	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Ghost", 0.025, 0.12, 1))
+	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Pumpkin", 0.895, 0.12, 2))
+	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Pumpkin", 0.025, 0.84, 3))
+	table.insert(self.SeasonGhosts, buildHalloweenIcon(halloweenFx, "Ghost", 0.895, 0.84, 4))
 	self.SeasonClock = 0
 	self:_updateSeasonalDecorations(self.ThemeName)
 end
@@ -1973,17 +2046,39 @@ function Window:_stepSeasonalDecorations(dt)
 			snow.Position = UDim2.fromScale(x, phase)
 			snow.Rotation = math.sin(clock + index) * 18
 		end
+		local function garlandY(point)
+			return 4 + math.sin(point * math.pi) * 12 + math.sin(clock * 0.65 + point * 5) * 0.6
+		end
+		local width = math.max(self.SeasonFX.AbsoluteSize.X, 1)
+		for _, segment in self.GarlandSegments do
+			local index = segment:GetAttribute("SegmentIndex")
+			local p1, p2 = (index - 1) / 12, index / 12
+			local x1, x2 = 0.045 + p1 * 0.912, 0.045 + p2 * 0.912
+			local y1, y2 = garlandY(p1), garlandY(p2)
+			local dx, dy = (x2 - x1) * width, y2 - y1
+			segment.Position = UDim2.new((x1 + x2) / 2, 0, 0, (y1 + y2) / 2)
+			segment.Size = UDim2.new(x2 - x1, 0, 0, 1.25)
+			segment.Rotation = math.deg(math.atan2(dy, dx))
+		end
 		for _, light in self.SeasonLights do
-			local index = light:GetAttribute("LightIndex")
-			local pulse = 0.75 + math.sin(clock * 3.2 + index * 0.8) * 0.25
-			light.BackgroundTransparency = 1 - pulse
+			local index = light.Bulb:GetAttribute("LightIndex")
+			local pulse = 0.52 + 0.48 * (0.5 + 0.5 * math.sin(clock * 2.8 + index * 0.91))
+			local sway = math.sin(clock * 1.35 + index * 0.7) * 0.8
+			local y = garlandY((index - 1) / 12)
+			light.Socket.Position = UDim2.new(light.X, sway, 0, y + 1)
+			light.Bulb.Position = UDim2.new(light.X, sway, 0, y + 6)
+			light.Glow.Position = UDim2.new(light.X, sway, 0, y + 7)
+			light.Bulb.BackgroundColor3 = light.Color:Lerp(Color3.new(1, 1, 1), pulse * 0.28)
+			light.Bulb.BackgroundTransparency = 0.06 + (1 - pulse) * 0.24
+			light.Glow.BackgroundTransparency = 0.83 - pulse * 0.48
+			light.Bulb.Size = Offset(7 + pulse * 1.3, 10 + pulse * 1.5)
 		end
 	elseif self.ThemeName == "Halloween" then
 		for _, accent in self.SeasonGhosts do
 			local index = accent:GetAttribute("FloatIndex")
-			local base = accent:GetAttribute("BaseY")
-			if not base then base = accent.Position.Y.Scale; accent:SetAttribute("BaseY", base) end
-			accent.Position = UDim2.new(accent.Position.X.Scale, accent.Position.X.Offset, base + math.sin(clock * 1.1 + index) * 0.012, accent.Position.Y.Offset)
+			local x, y = accent:GetAttribute("BaseX"), accent:GetAttribute("BaseY")
+			accent.Position = UDim2.fromScale(x + math.sin(clock * 0.9 + index) * 0.004, y + math.sin(clock * 1.1 + index) * 0.009)
+			accent.Rotation = math.sin(clock * 0.8 + index) * 2
 		end
 	end
 end
