@@ -390,6 +390,7 @@ end
 
 local Shadows = {
 	Large = { Blur = 10, Spread = 0, Transparency = 0.3 },    
+	Medium = { Blur = 8, Spread = 1, Transparency = 0.38 },
 	PickerKnob = { Blur = 6, Spread = 6, Transparency = 0.5 }, 
 }
 
@@ -399,6 +400,7 @@ local ShadowsAvailable = pcall(function() Instance.new("UIShadow"):Destroy() end
 local function addShadow(inst, style)
 	if not ShadowsAvailable then return nil end
 	local preset = Shadows[style]
+	if not preset then return nil end
 	local shadow = Instance.new("UIShadow")
 	shadow.BlurRadius = UDim.new(0, preset.Blur)
 	shadow.Spread = Offset(preset.Spread, preset.Spread)
